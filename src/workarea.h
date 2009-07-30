@@ -26,6 +26,8 @@ protected:
 private:
 	void drawChessBoard(QPainter *painter);
 
+public slots:
+	void setBinding(bool isBinding){ binding=isBinding; }
 private slots:
 	void textureDeleted(){ selectedTexture=0; }
 
@@ -33,6 +35,7 @@ public:
 	TextureModel *textureModel;
 	TTexture *selectedTexture;
 	QPointF localPos;
+	bool binding;
 };
 
 #endif // WORKAREA_H

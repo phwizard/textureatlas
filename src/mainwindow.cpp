@@ -69,6 +69,10 @@ MainWindow::MainWindow()
 	connect(ui.comboBoxResolution,SIGNAL(currentIndexChanged(int)), this,SLOT(resolutionAtlasChange()));
 	connect(ui.toolButtonAddResolution,SIGNAL(clicked(bool)), this,SLOT(AddNewResolution()));
 
+	connect(ui.toolButtonBinding,SIGNAL(clicked(bool)), ui.workArea,SLOT(setBinding(bool)));
+	ui.workArea->setBinding(ui.toolButtonBinding->isChecked());
+
+
 	//connect(ui.toolButtonStartStopSim,SIGNAL(clicked(bool)), ui.workArea,SLOT(startStopSimulation(bool)));
 
 	ui.comboBoxResolution->setCurrentIndex(1);
