@@ -159,18 +159,20 @@ Qt::ItemFlags TextureModel::flags(const QModelIndex &index) const
 
 void TextureModel::recursivePacking(fsRect *S2)
 {
+	float dp=1;
 	for (int i=0; i<tempTextures.size(); i++)
-		if ((!tempTextures[i]->isPacked) &&(tempTextures[i]->img.width() <= S2->w) && ((tempTextures[i]->img.height() <= S2->h)))
+		if ((!tempTextures[i]->isPacked) &&((tempTextures[i]->img.width()+2*dp) <= S2->w) &&
+			(((tempTextures[i]->img.height()+2*dp) <= S2->h)))
 		{
-			tempTextures[i]->x = S2->x;
-			tempTextures[i]->y = S2->y;
+			tempTextures[i]->x = S2->x+dp;
+			tempTextures[i]->y = S2->y+dp;
 			tempTextures[i]->isPacked = true;
 
 			fsRect S3,S4;
-			S3 = fsRect(S2->x, S2->y+tempTextures[i]->img.height(),
-						tempTextures[i]->img.width(), S2->h - tempTextures[i]->img.height());
-			S4 = fsRect(S2->x+tempTextures[i]->img.width(), S2->y,
-						S2->w - tempTextures[i]->img.width(), S2->h);
+			S3 = fsRect(S2->x, S2->y+tempTextures[i]->img.height()+2*dp,
+						tempTextures[i]->img.width()+2*dp, S2->h - tempTextures[i]->img.height()-2*dp);
+			S4 = fsRect(S2->x+tempTextures[i]->img.width()+2*dp, S2->y,
+						S2->w - tempTextures[i]->img.width()-2*dp, S2->h);
 			if (S3.w*S3.h > S4.w*S4.h)
 			{
 				*S2 = S3;
@@ -214,6 +216,8 @@ void TextureModel::arrangeImages()
 	float totalHeight = 0;
 	float minTotalHeight = 9999999;
 
+	float dp=1;
+
 	for (int i=0; i<textures.size(); i++)
 		for (int j=i; j<textures.size(); j++)
 		{
@@ -225,8 +229,8 @@ void TextureModel::arrangeImages()
 
 			for (int t=0; t<tempTextures.size(); t++)
 			{
-				tempTextures[t]->x = 0;
-				tempTextures[t]->y = 0;
+				tempTextures[t]->x = dp;
+				tempTextures[t]->y = dp;
 				tempTextures[t]->isPacked = false;
 			}
 
@@ -236,23 +240,23 @@ void TextureModel::arrangeImages()
 				if (tempTextures[t]->isPacked)
 					continue;
 
-				totalHeight += tempTextures[t]->img.height();
+				totalHeight += tempTextures[t]->img.height()+2*dp;
 
 				//if ((tempTextures[t]->img.width() > atlasWidth) || (totalHeight>atlasHeight))
-				if (tempTextures[t]->img.width() > atlasWidth)
+				if ((tempTextures[t]->img.width()+2*dp) > atlasWidth)
 				{
 					canMake=false;
 					break;
 				}
 
-				tempTextures[t]->x = S.x;
-				tempTextures[t]->y = S.y;
+				tempTextures[t]->x = S.x+dp;
+				tempTextures[t]->y = S.y+dp;
 				tempTextures[t]->isPacked = true;
 
 				fsRect S2,S1;
-				S2 = fsRect(S.x+tempTextures[t]->img.width(), S.y,
-							S.w - tempTextures[t]->img.width(), tempTextures[t]->img.height());
-				S1 = fsRect(S.x, S.y+tempTextures[t]->img.height(),
+				S2 = fsRect(S.x+tempTextures[t]->img.width()+2*dp, S.y,
+							S.w - tempTextures[t]->img.width()-2*dp, tempTextures[t]->img.height()+2*dp);
+				S1 = fsRect(S.x, S.y+tempTextures[t]->img.height()+2*dp,
 							S.w, -1);
 
 				S = S1;
