@@ -148,7 +148,7 @@ QToolBox::tab:selected {
        <number>0</number>
       </property>
       <property name="tabSpacing">
-       <number>6</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="page_textures">
        <property name="geometry">
@@ -156,7 +156,7 @@ QToolBox::tab:selected {
          <x>0</x>
          <y>0</y>
          <width>200</width>
-         <height>414</height>
+         <height>417</height>
         </rect>
        </property>
        <property name="sizePolicy">
