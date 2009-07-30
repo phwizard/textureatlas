@@ -183,72 +183,82 @@ void WorkArea::mouseMoveEvent(QMouseEvent *event)
 			selectedTexture->x += dx;
 			selectedTexture->y += dy;
 
-			QVector <cp> selectedPoints;
-			QVector <cp> notSelectedPoints;
-			///
-
-			float minDistSq=10000;
-			cp dp(0,0);
-
-			for (int i=0; i<textureModel->textures.size(); i++)
+			if (binding)
 			{
-				TTexture *curTex = &textureModel->textures[i];
+				QVector <cp> selectedPoints;
+				QVector <cp> notSelectedPoints;
+				///
 
-				QVector <cp> tempPs;
+				float minDistSq=10000;
+				cp dp(0,0);
 
-				/*
-				tempPs.push_back(cp(curTex->x, curTex->y));
-				tempPs.push_back(cp(curTex->x, curTex->y+curTex->img.height()-1));
-				tempPs.push_back(cp(curTex->x+curTex->img.width()-1, curTex->y+curTex->img.height()-1));
-				tempPs.push_back(cp(curTex->x+curTex->img.width()-1, curTex->y));
-				*/
-				tempPs.push_back(cp(curTex->x, curTex->y));
-				tempPs.push_back(cp(curTex->x, curTex->y+curTex->img.height()));
-				tempPs.push_back(cp(curTex->x+curTex->img.width(), curTex->y+curTex->img.height()));
-				tempPs.push_back(cp(curTex->x+curTex->img.width(), curTex->y));
-
-				/*
-				tempPs.push_back(cp(curTex->x, curTex->y));
-				tempPs.push_back(cp(curTex->x, curTex->y-curTex->img.height()+1));
-				tempPs.push_back(cp(curTex->x+curTex->img.width()-1, curTex->y-curTex->img.height()+1));
-				tempPs.push_back(cp(curTex->x+curTex->img.width()-1, curTex->y));
-				*/
-
-				if (curTex!=selectedTexture)
+				for (int i=0; i<textureModel->textures.size(); i++)
 				{
-					notSelectedPoints += tempPs;
-				}
-				else
-					selectedPoints = tempPs;
-			}
+					TTexture *curTex = &textureModel->textures[i];
 
-			cp tempP;
-			for (int s=0; s<selectedPoints.size(); s++)
-				for (int ns=0; ns<notSelectedPoints.size(); ns++)
-				{
-					tempP.x = notSelectedPoints[ns].x - selectedPoints[s].x;
-					tempP.y = notSelectedPoints[ns].y - selectedPoints[s].y;
-					if ((tempP.x*tempP.x+tempP.y*tempP.y) < minDistSq)
+					QVector <cp> tempPs;
+
+					/*
+					tempPs.push_back(cp(curTex->x, curTex->y));
+					tempPs.push_back(cp(curTex->x, curTex->y+curTex->img.height()-1));
+					tempPs.push_back(cp(curTex->x+curTex->img.width()-1, curTex->y+curTex->img.height()-1));
+					tempPs.push_back(cp(curTex->x+curTex->img.width()-1, curTex->y));
+					*/
+
+
+					/*
+					tempPs.push_back(cp(curTex->x, curTex->y));
+					tempPs.push_back(cp(curTex->x, curTex->y-curTex->img.height()+1));
+					tempPs.push_back(cp(curTex->x+curTex->img.width()-1, curTex->y-curTex->img.height()+1));
+					tempPs.push_back(cp(curTex->x+curTex->img.width()-1, curTex->y));
+					*/
+
+					if (curTex!=selectedTexture)
 					{
-						dp = tempP;
-						minDistSq = tempP.x*tempP.x+tempP.y*tempP.y;
-						qDebug() << s;
-						//break;
+						tempPs.push_back(cp(curTex->x, curTex->y));
+						tempPs.push_back(cp(curTex->x, curTex->y+curTex->img.height()));
+						tempPs.push_back(cp(curTex->x+curTex->img.width(), curTex->y+curTex->img.height()));
+						tempPs.push_back(cp(curTex->x+curTex->img.width(), curTex->y));
+						notSelectedPoints += tempPs;
+					}
+					else
+					{
+						tempPs.push_back(cp(curTex->x-1, curTex->y-1));
+						tempPs.push_back(cp(curTex->x-1, curTex->y+curTex->img.height()+1));
+						tempPs.push_back(cp(curTex->x+curTex->img.width()+1, curTex->y+curTex->img.height()+1));
+						tempPs.push_back(cp(curTex->x+curTex->img.width()+1, curTex->y-1));
+						selectedPoints = tempPs;
 					}
 				}
 
-			float dd= 8*(float)textureModel->atlasWidth/(float)width();
+				cp tempP;
+				for (int s=0; s<selectedPoints.size(); s++)
+					for (int ns=0; ns<notSelectedPoints.size(); ns++)
+					{
+						tempP.x = notSelectedPoints[ns].x - selectedPoints[s].x;
+						tempP.y = notSelectedPoints[ns].y - selectedPoints[s].y;
+						if ((tempP.x*tempP.x+tempP.y*tempP.y) < minDistSq)
+						{
+							dp = tempP;
+							minDistSq = tempP.x*tempP.x+tempP.y*tempP.y;
+							qDebug() << s;
+							//break;
+						}
+					}
 
-			if (minDistSq <= dd*dd)
-			//if (minDistSq <= 9)
-			{
-				selectedTexture->x += dp.x;
-				selectedTexture->y += dp.y;
-			}
-			//else
-			{
-				//selectedTexture->x += dx;
-				//selectedTexture->y += dy;
+				float dd= 8*(float)textureModel->atlasWidth/(float)width();
+
+				if (minDistSq <= dd*dd)
+				//if (minDistSq <= 9)
+				{
+					selectedTexture->x += dp.x;
+					selectedTexture->y += dp.y;
+				}
+				//else
+				{
+					//selectedTexture->x += dx;
+					//selectedTexture->y += dy;
+				}
 			}
 			this->update();
 		}

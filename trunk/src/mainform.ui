@@ -67,6 +67,19 @@
          <number>0</number>
         </property>
         <item>
+         <widget class="QToolButton" name="toolButtonBinding">
+          <property name="text">
+           <string>binding</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QToolButton" name="toolButtonMakeAtlas">
           <property name="text">
            <string>remake atlas</string>
