@@ -12,7 +12,22 @@ MainWindow::MainWindow()
 {
 	ui.setupUi(this);
 
-	//ui.comboBoxResolution
+	processLabel = new QLabel("Wait...\nmaking atlas...", 0, Qt::ToolTip);
+	processLabel->setAlignment(Qt::AlignCenter);
+	processLabel->resize(100,100);
+	//processLabel->adjustSize();
+	processLabel->setStyleSheet("QLabel {"
+			 "background-color: green;"
+			 "border-style: outset;"
+			 "border-width: 2px;"
+			 "border-radius: 10px;"
+			 "border-color: beige;"
+			 "font: bold 14px;"
+			 "min-width: 10em;"
+			 "padding: 6px;"
+			 "color:white;}");
+
+	processLabel->hide();
 
 	ui.comboBoxResolution->addItem("2048*2048", 2048);
 	ui.comboBoxResolution->addItem("1024*1024", 1024);
@@ -26,39 +41,27 @@ MainWindow::MainWindow()
 	actionSave->setEnabled(true);
 	ui.menubar->addAction(actionSave);
 
-
-	ui.listViewTextures->setSpacing(10);
-	//ui.listViewTextures->setMovement(QListView::Static);
-	ui.listViewTextures->setUniformItemSizes(true);
-	//ui.listViewTextures->setEditTriggers(QAbstractItemView::NoEditTriggers);
 	ui.listViewTextures->setSelectionRectVisible(true);
-	ui.listViewTextures->setFlow(QListView::LeftToRight);
-	ui.listViewTextures->setLayoutMode(QListView::Batched);
-	//ui.listViewTextures->setResizeMode(QListView::Adjust);
-	ui.listViewTextures->setViewMode(QListView::IconMode);
-	ui.listViewTextures->setIconSize(QSize(10, 10));
+	ui.listViewTextures->setSpacing(2);
+	ui.listViewTextures->setTextElideMode(Qt::ElideRight);
+	ui.listViewTextures->setViewMode(QListView::ListMode);
+	ui.listViewTextures->setMovement(QListView::Static);
+	ui.listViewTextures->setFlow(QListView::TopToBottom);
 
 	ui.listViewTextures->setDragEnabled(true);
 	ui.listViewTextures->setAcceptDrops(true);
 	ui.listViewTextures->setDropIndicatorShown(true);
 
-
 	textureModel = new TextureModel(this);
-	//textureModel->addTexture("red.png");
-	//textureModel->addTexture("orange.png");
 
 	ui.listViewTextures->setModel(textureModel);
 
 	ui.workArea->setAcceptDrops(true);
 	ui.workArea->setTextureModel(textureModel);
 
-	//this->setBackgroundRole(QPalette::ToolTipBase);
-	//this->resize(800, 600);
+	atlasThread = new AtlasThread(textureModel, this);
 
-	//ui.workArea->setStatusBar(ui.statusbar);
-
-	connect(ui.toolButtonMakeAtlas,SIGNAL(clicked(bool)), textureModel,SLOT(arrangeImages()));
-
+	connect(ui.toolButtonMakeAtlas,SIGNAL(clicked(bool)), atlasThread,SLOT(arrangeImages()));
 	connect(ui.pushButtonLoadFile,SIGNAL(clicked(bool)), this,SLOT(loadFile()));
 	connect(ui.pushButtonSaveFile,SIGNAL(clicked(bool)), this,SLOT(saveFileAs()));
 
@@ -73,10 +76,13 @@ MainWindow::MainWindow()
 	ui.workArea->setBinding(ui.toolButtonBinding->isChecked());
 
 
-	//connect(ui.toolButtonStartStopSim,SIGNAL(clicked(bool)), ui.workArea,SLOT(startStopSimulation(bool)));
+	connect(textureModel,SIGNAL(cantMakeAtlas()), this,SLOT(CantMakeAtlas()));
 
 	ui.comboBoxResolution->setCurrentIndex(1);
 	resolutionAtlasChange();
+
+	connect(atlasThread,SIGNAL(processStarted()), this,SLOT(processStarted()));
+	connect(atlasThread,SIGNAL(processEnded()), this,SLOT(processEnded()));
 }
 
 MainWindow::~MainWindow()
@@ -86,7 +92,9 @@ MainWindow::~MainWindow()
 void MainWindow::resolutionAtlasChange()
 {
 	int w= ui.comboBoxResolution->itemData(ui.comboBoxResolution->currentIndex()).toInt();
-	textureModel->setAtlasSize(w,w);
+	ui.workArea->setUpdatesEnabled(false);
+	ui.workArea->textureDeleted();
+	atlasThread->setAtlasSize(w);
 }
 
 void MainWindow::setCurrentFileName(const QString &fileName)
@@ -103,9 +111,6 @@ void MainWindow::setCurrentFileName(const QString &fileName)
 	setWindowModified(false);
 }
 
-
-
-
 void MainWindow::loadFile()
 {
 	QString path = QFileDialog::getOpenFileName(this, tr("Load Atlas..."),
@@ -113,12 +118,9 @@ void MainWindow::loadFile()
 
 	if ((!path.isEmpty()) && (QFile::exists(path)))
 	{
-		textureModel->LoadAtlas(path);
-		/*
-		QMessageBox::warning(this, tr("WYSIWYG Editor"),
-					tr("Error loading level\n"),
-					QMessageBox::Ok);//, QMessageBox::Ok);
-		*/
+		ui.workArea->setUpdatesEnabled(false);
+		ui.workArea->textureDeleted();
+		atlasThread->loadAtlas(path);
 	}
 }
 
@@ -128,11 +130,7 @@ bool MainWindow::saveFileAs()
 					"",	QString());
 	if (fn.isEmpty())
 		return false;
-
-	//if (! (fn.endsWith(".xml", Qt::CaseInsensitive) ))
-	//	fn += ".xml";
 	setCurrentFileName(fn);
-
 	return saveFile();
 }
 
@@ -141,65 +139,22 @@ bool MainWindow::saveFile()
 	if (fullFileName.isEmpty())
 		return saveFileAs();
 
-	textureModel->SaveAtlas(fullFileName);
-	/*
-	QFileInfo fi(fullFileName);
-	//if (fi.exists())
-	{
-		qDebug() << fi.path();
-		//fi.fileName()
-		QString dir = fi.path();
-
-		if (dir.at(dir.length()-1) !=  QDir::separator())
-			dir.append(QDir::separator());
-		ui.statusbar->showMessage("saving file...");
-		if (ui.workArea->gameWorld.saveXmlFile(dir.toStdString(),fi.fileName().toStdString()))
-		{
-			setWindowModified(false);
-			ui.statusbar->showMessage("saved");
-			return true;
-		}
-		else
-		{
-			QMessageBox::warning(this, tr("WYSIWYG Editor"),
-					tr("Error saving level\n"),
-				QMessageBox::Ok);//, QMessageBox::Ok);
-			ui.statusbar->showMessage("Error saving level");
-			return false;
-		}
-
-	}
-
-	ui.workArea->updateGL();
-	*/
+	atlasThread->saveAtlas(fullFileName);
 	return true;
 }
 
-
-/*
-void MainWindow::SetWorldTexture()
-{
-	QString path = QFileDialog::getOpenFileName(this,
-			tr("Open Image"), "", tr("Image Files (*.png)"));
-	if (!path.isEmpty())
-	{
-		ui.workArea->gameWorld.texNum = textureModel->addTexture(path.toStdString());
-
-
-		textureModel->recalculateResultImage();
-		//ui.workArea->gameWorld.resultTextureId = textureModel->resultTextureId;
-		ui.workArea->updateGL();
-	}
-}
-*/
-
 void MainWindow::AddFile()
 {
-	QString path = QFileDialog::getOpenFileName(this, tr("Load Level..."),
-					QString(), tr("PNG file (*.png);;All Files (*)"));
+	QString path = QFileDialog::getOpenFileName(this, tr("Add file..."),
+					QString(),
+					tr("Image Files (*.bmp *.jpg *jpeg *png *tiff);; PNG file (*.png);; JPG file (*.jpg *jpeg);; BMP file (*.bmp);; All Files (*)"));
 
 	if ((!path.isEmpty()) && (QFile::exists(path)))
-		textureModel->addTexture(path);
+	{
+		ui.workArea->setUpdatesEnabled(false);
+		ui.workArea->textureDeleted();
+		atlasThread->addTexture(path);
+	}
 }
 
 void MainWindow::AddFolder()
@@ -208,25 +163,8 @@ void MainWindow::AddFolder()
 													 "",
 													 QFileDialog::ShowDirsOnly
 													 | QFileDialog::DontResolveSymlinks);
-
 	if (!dirPath.isEmpty())
-	{
-		QDir dir;
-		dir.setPath(dirPath);
-
-		dir.setFilter(QDir::Files | QDir::Hidden | QDir::NoSymLinks | QDir::NoDotAndDotDot);
-		QStringList filters;
-		filters << "*.png" << "*.PNG";
-		dir.setNameFilters(filters);
-
-		QStringList listFiles = dir.entryList();
-
-		for (int i = 0; i < listFiles.size(); ++i)
-		{
-			textureModel->addTexture(dirPath+dir.separator()+listFiles.at(i), false);
-		}
-		textureModel->arrangeImages();
-	}
+		atlasThread->addDir(dirPath);
 }
 
 void MainWindow::AddNewResolution()
@@ -241,3 +179,23 @@ void MainWindow::AddNewResolution()
 		ui.comboBoxResolution->addItem(s, i);
 	}
 }
+
+void MainWindow::processStarted()
+{
+	ui.workArea->setUpdatesEnabled(false);
+	processLabel->show();
+	processLabel->move(this->pos()+QPoint(this->width()/2-processLabel->width()/2,this->height()/2-processLabel->height()/2));
+}
+
+void MainWindow::processEnded()
+{
+	processLabel->hide();
+	ui.workArea->setUpdatesEnabled(true);
+}
+
+void MainWindow::CantMakeAtlas()
+{
+	QMessageBox::warning(0, tr("Texture Atlas Maker"),
+					tr("Can't make texture atlas\n"), QMessageBox::Ok);
+}
+
