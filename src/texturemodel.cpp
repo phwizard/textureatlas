@@ -6,8 +6,6 @@ TextureModel::TextureModel(QObject *parent):QAbstractItemModel(parent)
 	atlasHeight = 1024.0;
 
 	resultImage = QImage(QSize(atlasWidth,atlasHeight), QImage::Format_ARGB32_Premultiplied);
-
-	//gameWorldTexVerts=0;
 }
 
 TextureModel::~TextureModel()
@@ -18,8 +16,6 @@ TextureModel::~TextureModel()
 
 void TextureModel::clear()
 {
-	//for (int i=0; i<textures.size(); i++)
-		//glWidget->deleteTexture(textures.value(i).textureId);
 	textures.clear();
 	makeAtlas();
 	reset();
@@ -29,47 +25,48 @@ int TextureModel::addTexture(QString path, bool mustRemakeAtlas)
 {
 	QFileInfo fi(path);
 
-	//if (fi.exists())
-	{
-		QImage img;
-		img.load(path);
+	QImage img;
+	if (!img.load(path))
+		return -1;
 
-		QString imageNameToAdd;
-		imageNameToAdd = fi.fileName();//baseName();
+	QString imageNameToAdd;
+	imageNameToAdd = fi.fileName();//baseName();
 
-		if (imageNameToAdd.endsWith(".png",Qt::CaseInsensitive))
-				imageNameToAdd = imageNameToAdd.left(imageNameToAdd.size()-4);
-		imageNameToAdd.replace(QChar(' '),QChar('_'));
+	int lastPosPoint = imageNameToAdd.lastIndexOf(QChar('.'));
+	if (lastPosPoint != -1)
+		imageNameToAdd = imageNameToAdd.left(lastPosPoint);
+	imageNameToAdd.replace(QChar(' '),QChar('_'));
+	imageNameToAdd.replace(QChar('.'),QChar('_'));
 
-		///проверяем-добавляли уже или нет такую текстуру
-		for (int i=0; i<textures.size(); i++)
-			//if (textures.value(i).img == img)
-			if (textures.value(i).name == imageNameToAdd)
-				return i;
+	///check- maybe we added this texture
+	for (int i=0; i<textures.size(); i++)
+		if (textures.value(i).name == imageNameToAdd)//if (textures.value(i).img == img)//not working correctly
+			return i;
 
-		{
-			beginInsertRows(QModelIndex(), textures.size(), textures.size());
+	beginInsertRows(QModelIndex(), textures.size(), textures.size());
 
-			textures.push_back(TTexture());
-			textures.last().img = img;
+	textures.push_back(TTexture());
+	textures.last().img = img;
 
-			textures.last().name = imageNameToAdd;
+	textures.last().name = imageNameToAdd;
 
-			//for (int t=0; t<(textures.size()-1); t++)
-				//if (textures.value(t).name == textures.last().name)
-					//textures.last().name = "_"+textures.last().name;
+	textures.last().size = img.width()*img.height();
+	textures.last().texNum = textures.size()-1;
+	endInsertRows();
 
-			textures.last().size = img.width()*img.height();
-			textures.last().texNum = textures.size()-1;
-			endInsertRows();
+	if (mustRemakeAtlas)
+		arrangeImages();
 
-			if (mustRemakeAtlas)
-				arrangeImages();
+	return (textures.size()-1);
 
-			return (textures.size()-1);
-		}
-	}
 	return -1;
+}
+
+int TextureModel::addTextures(QStringList pathList)
+{
+	for (int i=0; i<pathList.size(); i++)
+		addTexture(pathList.at(i), false);
+	arrangeImages();
 }
 
 QModelIndex TextureModel::index(int row, int column, const QModelIndex &parent) const
@@ -131,11 +128,7 @@ QVariant TextureModel::data(const QModelIndex &index, int role) const
 		case Qt::UserRole+1:
 			return textures.value(index.row()).texNum;
 			break;
-		//case Qt::SizeHintRole:
-		//	return QSize(20,20);
-		//	break;
 	}
-
 	return QVariant();
 }
 
@@ -154,8 +147,6 @@ Qt::ItemFlags TextureModel::flags(const QModelIndex &index) const
 		return 0;
 	return (Qt::ItemIsDragEnabled|Qt::ItemIsSelectable|Qt::ItemIsEnabled);
 }
-
-
 
 void TextureModel::recursivePacking(fsRect *S2)
 {
@@ -192,16 +183,7 @@ void TextureModel::recursivePacking(fsRect *S2)
 
 void TextureModel::arrangeImages()
 {
-	//QPainter painter(&resultImage);
-	//painter.setCompositionMode(QPainter::CompositionMode_Source);
-	//painter.fillRect(resultImage.rect(), Qt::transparent);
-
-
 	bool cantMake=false;
-
-	//NodeClass *root = new NodeClass();
-	//root->rc = QRectF(0.0,0.0, 1024.0, 1024.0);
-	//root->SetRect(0,0,atlasWidth,atlasHeight);
 
 	QVector <QPoint> optimTex;
 	tempTextures.clear();
@@ -212,10 +194,8 @@ void TextureModel::arrangeImages()
 		optimTex.push_back(QPoint(0,0));
 	}
 
-
 	float totalHeight = 0;
 	float minTotalHeight = 9999999;
-
 	float dp=1;
 
 	for (int i=0; i<textures.size(); i++)
@@ -242,7 +222,6 @@ void TextureModel::arrangeImages()
 
 				totalHeight += tempTextures[t]->img.height()+2*dp;
 
-				//if ((tempTextures[t]->img.width() > atlasWidth) || (totalHeight>atlasHeight))
 				if ((tempTextures[t]->img.width()+2*dp) > atlasWidth)
 				{
 					canMake=false;
@@ -274,7 +253,6 @@ void TextureModel::arrangeImages()
 			}
 		}
 
-
 	for (int t=0; t<textures.size(); t++)
 	{
 		textures[t].x = optimTex[t].x();
@@ -284,54 +262,7 @@ void TextureModel::arrangeImages()
 	makeAtlas();
 
 	if ((textures.size()>0) &&(minTotalHeight > atlasHeight))
-	//emit atlasTextureUpdated();
-		QMessageBox::warning(0, tr("Texture Atlas Maker"),
-					tr("Can't make texture atlas\n"), QMessageBox::Ok);
-
-		//
-
-
-		//NodeClass *curNode=0;
-		//if (!(curNode=root->Insert(curTexture)))
-		//	cantMake=true;
-		//else
-		{
-			//painter.drawImage(curTexture->x, curTexture->y, curTexture->img);
-
-			/*
-			curTexture->texVerts[0] = r.x();
-			curTexture->texVerts[1] = atlasHeight - r.y() -curTexture->img.height()+1;
-
-			curTexture->texVerts[2] = r.x();
-			curTexture->texVerts[3] = atlasHeight-r.y()-1;
-
-			curTexture->texVerts[4] = r.x()+curTexture->img.width()-1;
-			curTexture->texVerts[5] = atlasHeight-r.y()-1;
-
-			curTexture->texVerts[6] = r.x()+curTexture->img.width()-1;
-			curTexture->texVerts[7] = atlasHeight - r.y() -curTexture->img.height()+1;
-			*/
-		}
-		//iter.key()
-		//iter.value();
-
-
-	//painter.fillRect(resultImage.rect(), Qt::white);
-
-
-	/*
-	for (int i=0; i<textures.size(); i++)
-	{
-		for (int v=0; v<8; v++)
-		{
-			if ((v % 2)==0)
-				gameWorldTexVerts[i][v] = textures[i].texVerts[v]/textureWidth;
-			else
-				gameWorldTexVerts[i][v] = textures[i].texVerts[v]/textureHeight;
-		}
-	}
-	*/	
-	//resultImage.save("result.png");
+		emit cantMakeAtlas();
 }
 
 void TextureModel::makeAtlas()
@@ -360,23 +291,12 @@ void TextureModel::makeAtlas()
 	painter.end();
 
 	emit atlasTextureUpdated();
-	/*
-	for (int i=0; i<textures.size(); i++)
-	{
-		for (int v=0; v<8; v++)
-		{
-			if ((v % 2)==0)
-				gameWorldTexVerts[i][v] = textures[i].texVerts[v]/textureWidth;
-			else
-				gameWorldTexVerts[i][v] = textures[i].texVerts[v]/textureHeight;
-		}
-	}
-	*/
 }
 
 void TextureModel::LoadAtlas(QString path)
 {
 	textures.clear();
+	reset();
 
 	QString headerName;
 	headerName = path;
@@ -409,7 +329,6 @@ void TextureModel::LoadAtlas(QString path)
 					y = rectS[1].toInt();
 					w = rectS[2].simplified().toInt();
 					h = rectS[3].simplified().toInt();
-					//QImage img = loadedImage.copy(x,y,w,h);
 					TTexture newTex;
 
 					newTex.x = x;
@@ -430,37 +349,6 @@ void TextureModel::LoadAtlas(QString path)
 
 	setAtlasSize(loadedImage.width(), loadedImage.height());
 	reset();
-	 /*
-	for (int t=0; t<gameWorldTexVerts.size(); t++)
-	{
-		qDebug ("=-=-");
-		TTexture curTex;
-
-
-		for (int p=0; p<8; p++)
-		{
-			curTex.texVerts[p] = gameWorldTexVerts[t][p];
-
-			if ((p % 2)==0)
-				gameWorldTexVerts[t][p] = gameWorldTexVerts[t][p]/textureWidth;
-			else
-				gameWorldTexVerts[t][p] = gameWorldTexVerts[t][p]/textureHeight;
-		}
-
-		curTex.img = curTex.img.fromImage( resultImage.copy(curTex.texVerts[0], resultSize.height()-curTex.texVerts[3]-1,
-									  curTex.texVerts[6]-curTex.texVerts[0],
-									  curTex.texVerts[3]-curTex.texVerts[1]));
-		//QImage tempim;
-		//tempim = resultImage.copy(0,0, 256, 256);
-		//curTex.img = curTex.img.fromImage( tempim);
-
-		curTex.size = curTex.img.width()*curTex.img.height();
-		curTex.name="test";
-		curTex.texNum = t;
-		textures.push_back(curTex);
-	}
-	reset();
-	*/
 }
 
 struct elemTex
@@ -504,8 +392,6 @@ bool texLessThan(const TTexture &t1, const TTexture &t2)
 	}
 	else
 		return (texName1 < texName2);
-
- //return s1.toLower() < s2.toLower();
 }
 
 void TextureModel::SaveAtlas(QString path)
@@ -520,7 +406,7 @@ void TextureModel::SaveAtlas(QString path)
 	QString fileName = fi.fileName();
 
 	QString imageFullPath;
-	QString headerFName = path;//Р±РµР· ".h"
+	QString headerFName = path;
 
 	if (fileName.endsWith(".png",Qt::CaseInsensitive))
 		headerFName = fileName.left(fileName.size()-4);
@@ -592,6 +478,17 @@ void TextureModel::SaveAtlas(QString path)
 		}
 		outCPP << "};\n";
 
+		outH << "\nextern float " << "wh_" << headerFName << "[" << textures.size() << "];\n";
+		outCPP << "\nfloat " << "wh_" << headerFName << "[" << textures.size() << "] = { ";
+		for (int i=0; i<textures.size(); i++)
+		{
+			outCPP << (float)textures[i].img.width()/(float)textures[i].img.height();
+			if (i < (textures.size()-1))
+				outCPP << ",";
+			outCPP << "//" << textures[i].name << " - " << i << "\n";
+		}
+		outCPP << "};\n";
+
 		outH << "#endif\n";
 
 		outH << "////loadformat\n";
@@ -600,7 +497,6 @@ void TextureModel::SaveAtlas(QString path)
 			outH << "//" << textures[i].name << "=" << textures[i].x << "," << textures[i].y << ","
 												<< textures[i].img.width() << "," << textures[i].img.height() << "\n";
 		}
-
 		outH << "\0";
 
 		reset();

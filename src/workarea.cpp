@@ -22,35 +22,31 @@ void WorkArea::setTextureModel(TextureModel *_textureModel)
 
 void WorkArea::drawChessBoard(QPainter *painter)
 {
-		//int countBoxW = textureModel->atlasWidth/widthBox;
-		//int countBoxH = textureModel->atlasHeight/heightBox;
-		//int widthBox = 4*textureModel->atlasWidth;
-		//int heightBox = 4*textureModel->atlasHeight;
-		int widthBox = 32;
-		int heightBox = 32;
+	int widthBox = 32;
+	int heightBox = 32;
 
-		int countBoxW = textureModel->atlasWidth/widthBox;
-		int countBoxH = textureModel->atlasHeight/heightBox;
+	int countBoxW = textureModel->atlasWidth/widthBox;
+	int countBoxH = textureModel->atlasHeight/heightBox;
 
 
-		painter->setPen(Qt::NoPen);
+	painter->setPen(Qt::NoPen);
 
-		painter->setBrush(Qt::lightGray);
+	painter->setBrush(Qt::lightGray);
 
-		for (int i=0; i<countBoxW; i++)
-			for (int j=0; j<countBoxH; j++)
-			{
-				if (((i+j) % 2)==0)
-					painter->drawRect(i*widthBox, j*heightBox, widthBox,heightBox);
-			}
+	for (int i=0; i<countBoxW; i++)
+		for (int j=0; j<countBoxH; j++)
+		{
+			if (((i+j) % 2)==0)
+				painter->drawRect(i*widthBox, j*heightBox, widthBox,heightBox);
+		}
 
-		painter->setBrush(Qt::gray);
-		for (int i=0; i<countBoxW; i++)
-			for (int j=0; j<countBoxH; j++)
-			{
-				if (((i+j) % 2)!=0)
-					painter->drawRect(i*widthBox, j*heightBox, widthBox,heightBox);
-			}
+	painter->setBrush(Qt::gray);
+	for (int i=0; i<countBoxW; i++)
+		for (int j=0; j<countBoxH; j++)
+		{
+			if (((i+j) % 2)!=0)
+				painter->drawRect(i*widthBox, j*heightBox, widthBox,heightBox);
+		}
 }
 void WorkArea::paintEvent(QPaintEvent *event)
 {
@@ -64,27 +60,13 @@ void WorkArea::paintEvent(QPaintEvent *event)
 		QRectF target(this->rect());
 		QRectF source(img->rect());
 
-		//int widthBox = source.width()/target.width();
-		//int heightBox = source.height()/target.height();
-
-		//painter.drawImage(target, textureModel->resultImage, source);
-
-		//painter.setViewport();
 		int side = qMin(width(), height());
 		painter.scale(side / textureModel->atlasWidth, side / textureModel->atlasHeight);
-		//painter.scale(width() / textureModel->atlasWidth, height() / textureModel->atlasHeight);
-
-		//
 		drawChessBoard(&painter);
-		//
-		//painter.setViewport(0, 0, width()/3, height()/3);
-
-		//painter.setPen(Qt::darkGreen);
 		painter.setBrush(Qt::NoBrush);
 
 		QPen pen;
 		pen.setStyle(Qt::DotLine);
-		//pen.setWidth(1);
 		pen.setBrush(Qt::green);
 
 		painter.setPen(pen);
@@ -105,33 +87,11 @@ void WorkArea::paintEvent(QPaintEvent *event)
 							 selectedTexture->img.width(), selectedTexture->img.height());
 		}
 	}
-	//painter.setRenderHint(QPainter::Antialiasing);
-
-	//painter.setPen(QColor(50, 100, 120, 200));
-	//painter.setPen(QColor(50, 100, 120, 255));
-
-
-	/*
-for (int i=0; i<balls.size(); ++i)
-	{
-		painter.setBrush(balls[i].color);
-		//painter.setBrush(gradient);
-		int m_pointSize = balls[i].r;
-
-		painter.drawEllipse(QRect(balls[i].x - m_pointSize,
-						balls[i].y - m_pointSize,
-						m_pointSize*2, m_pointSize*2));
-	}
-	*/
 }
 
 void WorkArea::mousePressEvent(QMouseEvent *event)
 {
 	QPoint pGlobal = event->pos();
-	//QPointF curPos;
-	//curPos.setX((textureModel->atlasWidth-1.0)*(float)pGlobal.x()/((float)this->width()-1.0));
-	//curPos.setY((textureModel->atlasHeight-1.0)*(float)pGlobal.y()/((float)this->height()-1.0));
-
 
 	int side = qMin(width(), height());
 	QPointF p;
@@ -152,7 +112,8 @@ void WorkArea::mousePressEvent(QMouseEvent *event)
 
 	localPos = p;
 
-	this->update();
+	if (updatesEnabled())
+		this->update();
 }
 
 struct cp
@@ -167,8 +128,6 @@ void WorkArea::mouseMoveEvent(QMouseEvent *event)
 	QPointF curPos;
 
 	int side = qMin(width(), height());
-	//curPos.setX((textureModel->atlasWidth-1.0)*(float)pGlobal.x()/((float)this->width()-1.0));
-	//curPos.setY((textureModel->atlasHeight-1.0)*(float)pGlobal.y()/((float)this->height()-1.0));
 	curPos.setX((textureModel->atlasWidth-1.0)*(float)pGlobal.x()/((float)side-1.0));
 	curPos.setY((textureModel->atlasHeight-1.0)*(float)pGlobal.y()/((float)side-1.0));
 
@@ -198,21 +157,6 @@ void WorkArea::mouseMoveEvent(QMouseEvent *event)
 
 					QVector <cp> tempPs;
 
-					/*
-					tempPs.push_back(cp(curTex->x, curTex->y));
-					tempPs.push_back(cp(curTex->x, curTex->y+curTex->img.height()-1));
-					tempPs.push_back(cp(curTex->x+curTex->img.width()-1, curTex->y+curTex->img.height()-1));
-					tempPs.push_back(cp(curTex->x+curTex->img.width()-1, curTex->y));
-					*/
-
-
-					/*
-					tempPs.push_back(cp(curTex->x, curTex->y));
-					tempPs.push_back(cp(curTex->x, curTex->y-curTex->img.height()+1));
-					tempPs.push_back(cp(curTex->x+curTex->img.width()-1, curTex->y-curTex->img.height()+1));
-					tempPs.push_back(cp(curTex->x+curTex->img.width()-1, curTex->y));
-					*/
-
 					if (curTex!=selectedTexture)
 					{
 						tempPs.push_back(cp(curTex->x, curTex->y));
@@ -241,7 +185,6 @@ void WorkArea::mouseMoveEvent(QMouseEvent *event)
 						{
 							dp = tempP;
 							minDistSq = tempP.x*tempP.x+tempP.y*tempP.y;
-							qDebug() << s;
 							//break;
 						}
 					}
@@ -254,13 +197,9 @@ void WorkArea::mouseMoveEvent(QMouseEvent *event)
 					selectedTexture->x += dp.x;
 					selectedTexture->y += dp.y;
 				}
-				//else
-				{
-					//selectedTexture->x += dx;
-					//selectedTexture->y += dy;
-				}
 			}
-			this->update();
+			if (updatesEnabled())
+				update();
 		}
 	}
 
@@ -269,8 +208,8 @@ void WorkArea::mouseMoveEvent(QMouseEvent *event)
 
 void WorkArea::mouseReleaseEvent(QMouseEvent *event)
 {
-	//selectedTexture=0;
-	this->update();
+	if (updatesEnabled())
+		this->update();
 }
 
 void WorkArea::keyPressEvent(QKeyEvent *event)
@@ -280,7 +219,6 @@ void WorkArea::keyPressEvent(QKeyEvent *event)
 		case Qt::Key_Delete:
 			if (selectedTexture)
 			{
-				qDebug("444");
 				textureModel->delTexture(selectedTexture);
 				selectedTexture=0;
 			}

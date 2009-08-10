@@ -6,7 +6,6 @@
 #include <QPixmap>
 #include <QIcon>
 #include <QFileInfo>
-#include <QMessageBox>
 #include <QPainter>
 #include <QDebug>
 #include <QDir>
@@ -30,6 +29,7 @@ public:
 
 
 	int addTexture(QString path, bool mustRemakeAtlas=true);
+	int addTextures(QStringList pathList);
 	void delTexture(int num)
 	{
 		if ((num>=0) && (num<textures.size()))
@@ -54,8 +54,6 @@ public:
 				emit textureDeleted();
 			}
 	}
-	//std::string getTextureFullPath(GLuint texId);
-
 
 	QModelIndex index(int row, int column, const QModelIndex &parent) const;
 	QModelIndex parent(const QModelIndex &child) const;
@@ -76,12 +74,13 @@ public:
 signals:
 	void atlasTextureUpdated();
 	void textureDeleted();
+	void cantMakeAtlas();
 
 public slots:
 	void clear();
 	void arrangeImages();//
 	void makeAtlas();
-	void setAtlasSize(int w, int h);
+	void setAtlasSize(int w, int h);/// change atlas size
 public:
 	QImage resultImage;
 	QVector <TTexture> textures;
@@ -89,9 +88,6 @@ public:
 
 	float atlasWidth;
 	float atlasHeight;
-
-private:
-
 };
 
 #endif // TEXTUREMODEL_H
