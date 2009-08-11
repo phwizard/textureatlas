@@ -12,7 +12,7 @@ enum TYPE_ACTION
 	TA_LOAD_ATLAS=0,
 	TA_SAVE_ATLAS,
 	TA_ARRANGE_IMAGES,
-	TA_ADD_TEXTURE,
+	TA_ADD_TEXTURES,
 	TA_ADD_DIR,
 	TA_CHANGE_ATLAS_SIZE
 };
@@ -28,7 +28,7 @@ public:
 	void loadAtlas(QString _path);
 	void saveAtlas(QString _path);
 
-	void addTexture(QString _path);
+	void addTextures(QStringList _listFiles);
 	void addDir(QString _dirPath);
 	void setAtlasSize(int size);
 
@@ -53,6 +53,7 @@ private:
 	bool isMustLoadAtlas;
 	int typeAction;
 	int atlasSize;
+	QStringList listFiles;
 };
 
 #endif // ATLASTHREAD_H
