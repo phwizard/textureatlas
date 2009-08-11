@@ -59,13 +59,13 @@ void AtlasThread::arrangeImages()
 	}
 }
 
-void AtlasThread::addTexture(QString _path)
+void AtlasThread::addTextures(QStringList _listFiles)
 {
 	QMutexLocker locker(&mutex);
 	if (!isRunning())
 	{
-		path=_path;
-		typeAction=TA_ADD_TEXTURE;
+		listFiles=_listFiles;
+		typeAction=TA_ADD_TEXTURES;
 		start();
 	}
 }
@@ -113,8 +113,9 @@ void AtlasThread::run()
 			case TA_ARRANGE_IMAGES:
 				textureModel->arrangeImages();
 				break;
-			case TA_ADD_TEXTURE:
-				textureModel->addTexture(_path);
+			case TA_ADD_TEXTURES:
+				//textureModel->addTexture(_path);
+				textureModel->addTextures(listFiles);
 				break;
 			case TA_CHANGE_ATLAS_SIZE:
 				textureModel->setAtlasSize(atlasSize,atlasSize);

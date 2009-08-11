@@ -145,15 +145,16 @@ bool MainWindow::saveFile()
 
 void MainWindow::AddFile()
 {
-	QString path = QFileDialog::getOpenFileName(this, tr("Add file..."),
+	QStringList listFiles = QFileDialog::getOpenFileNames(this, tr("Select one or more files..."),
 					QString(),
 					tr("Image Files (*.bmp *.jpg *jpeg *png *tiff);; PNG file (*.png);; JPG file (*.jpg *jpeg);; BMP file (*.bmp);; All Files (*)"));
 
-	if ((!path.isEmpty()) && (QFile::exists(path)))
+	//if ((!path.isEmpty()) && (QFile::exists(path)))
+	if (listFiles.size()>0)
 	{
 		ui.workArea->setUpdatesEnabled(false);
 		ui.workArea->textureDeleted();
-		atlasThread->addTexture(path);
+		atlasThread->addTextures(listFiles);
 	}
 }
 
