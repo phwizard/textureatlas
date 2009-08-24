@@ -12,11 +12,8 @@ MainWindow::MainWindow()
 {
 	ui.setupUi(this);
 
-	processLabel = new QLabel("Wait...\nmaking atlas...", 0, Qt::ToolTip);
-	processLabel->setAlignment(Qt::AlignCenter);
-	processLabel->resize(100,100);
-	//processLabel->adjustSize();
-	processLabel->setStyleSheet("QLabel {"
+	proccesWidget = new QWidget(this);//, Qt::ToolTip);
+	proccesWidget->setStyleSheet("QLabel {"
 			 "background-color: green;"
 			 "border-style: outset;"
 			 "border-width: 2px;"
@@ -25,9 +22,38 @@ MainWindow::MainWindow()
 			 "font: bold 14px;"
 			 "min-width: 10em;"
 			 "padding: 6px;"
-			 "color:white;}");
+			 "color:white;}"
+			"QProgressBar::chunk {"
+							"background-color: #00CE00;"
+							"width: 10px;"
+							"margin: 0.5px;};"
+			);
 
-	processLabel->hide();
+	QVBoxLayout *verticalLayout = new QVBoxLayout(proccesWidget);
+	processLabel = new QLabel("Wait...\nmaking atlas...", proccesWidget);
+	processLabel->setAlignment(Qt::AlignCenter);
+	verticalLayout->addWidget(processLabel);
+
+	progressBar = new QProgressBar(proccesWidget);
+
+	progressBar->setValue(0);
+	progressBar->setMinimum(0);
+	progressBar->setMaximum(100);
+	progressBar->setAlignment(Qt::AlignCenter);
+	progressBar->setTextVisible(true);
+	progressBar->setInvertedAppearance(false);
+	progressBar->setTextDirection(QProgressBar::TopToBottom);
+
+	verticalLayout->addWidget(progressBar);
+
+	//proccesWidget->resize(100,100);
+	proccesWidget->adjustSize();
+	proccesWidget->hide();
+	/////////////////
+
+
+
+
 
 	ui.comboBoxResolution->addItem("2048*2048", 2048);
 	ui.comboBoxResolution->addItem("1024*1024", 1024);
@@ -83,10 +109,14 @@ MainWindow::MainWindow()
 
 	connect(atlasThread,SIGNAL(processStarted()), this,SLOT(processStarted()));
 	connect(atlasThread,SIGNAL(processEnded()), this,SLOT(processEnded()));
+
+
+	connect(textureModel,SIGNAL(currentProgress(int)), progressBar,SLOT(setValue(int)));
 }
 
 MainWindow::~MainWindow()
 {
+	//delete proccesWidget;
 }
 
 void MainWindow::resolutionAtlasChange()
@@ -145,16 +175,15 @@ bool MainWindow::saveFile()
 
 void MainWindow::AddFile()
 {
-	QStringList listFiles = QFileDialog::getOpenFileNames(this, tr("Select one or more files..."),
+	QString path = QFileDialog::getOpenFileName(this, tr("Add file..."),
 					QString(),
 					tr("Image Files (*.bmp *.jpg *jpeg *png *tiff);; PNG file (*.png);; JPG file (*.jpg *jpeg);; BMP file (*.bmp);; All Files (*)"));
 
-	//if ((!path.isEmpty()) && (QFile::exists(path)))
-	if (listFiles.size()>0)
+	if ((!path.isEmpty()) && (QFile::exists(path)))
 	{
 		ui.workArea->setUpdatesEnabled(false);
 		ui.workArea->textureDeleted();
-		atlasThread->addTextures(listFiles);
+		atlasThread->addTexture(path);
 	}
 }
 
@@ -184,13 +213,14 @@ void MainWindow::AddNewResolution()
 void MainWindow::processStarted()
 {
 	ui.workArea->setUpdatesEnabled(false);
-	processLabel->show();
-	processLabel->move(this->pos()+QPoint(this->width()/2-processLabel->width()/2,this->height()/2-processLabel->height()/2));
+	progressBar->setValue(0);
+	proccesWidget->show();
+	//proccesWidget->move(this->pos()+QPoint(this->width()/2-proccesWidget->width()/2,this->height()/2-proccesWidget->height()/2));
 }
 
 void MainWindow::processEnded()
 {
-	processLabel->hide();
+	proccesWidget->hide();
 	ui.workArea->setUpdatesEnabled(true);
 }
 

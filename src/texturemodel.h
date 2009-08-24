@@ -75,6 +75,7 @@ signals:
 	void atlasTextureUpdated();
 	void textureDeleted();
 	void cantMakeAtlas();
+	void currentProgress(int percent);
 
 public slots:
 	void clear();

@@ -8,6 +8,8 @@
 #include <QDebug>
 #include <QFileDialog>
 #include <QInputDialog>
+#include <QProgressBar>
+
 
 
 #include "ui_mainform.h"
@@ -52,6 +54,8 @@ private:
 
 	AtlasThread *atlasThread;
 	QLabel *processLabel;/// label, showed when thread make atlas
+	QWidget *proccesWidget;
+	QProgressBar *progressBar;
 };
 
 #endif // MAINWINDOW_H

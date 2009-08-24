@@ -198,6 +198,18 @@ void TextureModel::arrangeImages()
 	float minTotalHeight = 9999999;
 	float dp=1;
 
+	int countSteps = 0;
+	//FIXME:bad code
+	for (int i=0; i<textures.size(); i++)
+		for (int j=i; j<textures.size(); j++)
+			countSteps++;
+	if (countSteps==0)
+		countSteps=1;
+	int currentStep=0;
+	int currentPercent=0;
+
+	emit currentProgress(0);
+
 	for (int i=0; i<textures.size(); i++)
 		for (int j=i; j<textures.size(); j++)
 		{
@@ -251,6 +263,10 @@ void TextureModel::arrangeImages()
 					optimTex[tempTextures[t]->texNum].setY(tempTextures[t]->y);
 				}
 			}
+
+			currentStep++;
+			currentPercent = (currentStep*100)/countSteps;
+			emit currentProgress(currentPercent);
 		}
 
 	for (int t=0; t<textures.size(); t++)
@@ -441,6 +457,7 @@ void TextureModel::SaveAtlas(QString path)
 		for (int i=0; i<textures.size(); i++)
 			outH << "#define _" << headerFName << "_" << textures[i].name << "_ " << i <<"\n";
 
+		/*
 		for (int i=0; i<textures.size(); i++)
 		{
 			outH << "extern float " << headerFName << "_" << textures[i].name << "[8];\n";
@@ -449,6 +466,7 @@ void TextureModel::SaveAtlas(QString path)
 				outCPP << textures[i].texVerts[p] << ", ";
 			outCPP << textures[i].texVerts[7] << "};\n";
 		}
+		*/
 
 		outH << "\nextern float " << headerFName << "[" << textures.size() << "][8];\n";
 		outCPP << "\nfloat " << headerFName << "[" << textures.size() << "][8] = { ";
