@@ -291,6 +291,30 @@ void TextureModel::makeAtlas()
 	{
 		painter.drawImage(textures[i].x, textures[i].y, textures[i].img);
 
+		//TL
+		//float lx = textures[i].x/atlasWidth;
+		float lx = (textures[i].x)/atlasWidth;
+		float ty = 1.0-(textures[i].y)/atlasHeight;
+
+		//float rx =  (textures[i].x+textures[i].img.width()-1)/(atlasWidth);
+		float rx =  (textures[i].x+textures[i].img.width())/(atlasWidth);
+		float by = 1-(textures[i].y+textures[i].img.height())/atlasHeight;
+
+
+
+			textures[i].texVerts[0] = lx;
+			textures[i].texVerts[1] = by;
+
+			textures[i].texVerts[2] = lx;
+			textures[i].texVerts[3] = ty;
+
+			textures[i].texVerts[4] = rx;
+			textures[i].texVerts[5] = ty;
+
+			textures[i].texVerts[6] = rx;
+			textures[i].texVerts[7] = by;
+
+			/*
 			textures[i].texVerts[0] = textures[i].x/(atlasWidth-1);
 			textures[i].texVerts[1] = (atlasHeight-1-(textures[i].y+textures[i].img.height()-1))/(atlasHeight-1);
 
@@ -302,6 +326,7 @@ void TextureModel::makeAtlas()
 
 			textures[i].texVerts[6] = (textures[i].x+textures[i].img.width()-1)/(atlasWidth-1);
 			textures[i].texVerts[7] = (atlasHeight-1-(textures[i].y+textures[i].img.height()-1))/(atlasHeight-1);
+			*/
 	}
 
 	painter.end();
