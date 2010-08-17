@@ -67,6 +67,7 @@ int TextureModel::addTextures(QStringList pathList)
 	for (int i=0; i<pathList.size(); i++)
 		addTexture(pathList.at(i), false);
 	arrangeImages();
+	return 0;
 }
 
 QModelIndex TextureModel::index(int row, int column, const QModelIndex &parent) const
@@ -183,7 +184,7 @@ void TextureModel::recursivePacking(fsRect *S2)
 
 void TextureModel::arrangeImages()
 {
-	bool cantMake=false;
+	//bool cantMake=false;
 
 	QVector <QPoint> optimTex;
 	tempTextures.clear();
@@ -281,6 +282,36 @@ void TextureModel::arrangeImages()
 		emit cantMakeAtlas();
 }
 
+CPoint TextureModel::pixelSpaceToUVSpace(CPoint xy)
+{
+	return CPoint(xy.x / ((float)atlasWidth), xy.y / ((float)atlasHeight));
+}
+
+void TextureModel::pixelCoordToUVCoord(TTexture *texItem)
+{
+	//12
+	//03
+	//CPoint lowerLeftUV = pixelSpaceToUVSpace(CPoint(texItem->x, texItem->y));
+	CPoint topLeftUV = pixelSpaceToUVSpace(CPoint(texItem->x, texItem->y));
+	topLeftUV.y = 1.0f - topLeftUV.y;
+
+	//CPoint UVDimensions = pixelSpaceToUVSpace(CPoint(texItem->img.width(), texItem->img.height()));
+	CPoint UVDimensions = pixelSpaceToUVSpace(CPoint(texItem->img.width(), texItem->img.height()));
+
+	CPoint p[4];
+
+	p[0] = CPoint(topLeftUV.x, topLeftUV.y-UVDimensions.y);// Upper-left
+	p[1] = topLeftUV;// Lower-left
+	p[2] = CPoint(topLeftUV.x+UVDimensions.x, topLeftUV.y);// Upper-right
+	p[3] = CPoint(topLeftUV.x+UVDimensions.x, topLeftUV.y-UVDimensions.y);// Lower-left
+
+	for (int np=0, nv=0; np<4; np++, nv+=2)
+	{
+		texItem->texVerts[nv] = p[np].x;
+		texItem->texVerts[nv+1] = p[np].y;
+	}
+}
+
 void TextureModel::makeAtlas()
 {
 	QPainter painter(&resultImage);
@@ -291,16 +322,16 @@ void TextureModel::makeAtlas()
 	{
 		painter.drawImage(textures[i].x, textures[i].y, textures[i].img);
 
+		pixelCoordToUVCoord(&textures[i]);
 		//TL
 		//float lx = textures[i].x/atlasWidth;
+		/*
 		float lx = (textures[i].x)/atlasWidth;
 		float ty = 1.0-(textures[i].y)/atlasHeight;
 
 		//float rx =  (textures[i].x+textures[i].img.width()-1)/(atlasWidth);
 		float rx =  (textures[i].x+textures[i].img.width())/(atlasWidth);
 		float by = 1-(textures[i].y+textures[i].img.height())/atlasHeight;
-
-
 
 			textures[i].texVerts[0] = lx;
 			textures[i].texVerts[1] = by;
@@ -313,8 +344,12 @@ void TextureModel::makeAtlas()
 
 			textures[i].texVerts[6] = rx;
 			textures[i].texVerts[7] = by;
+			*/
 
-			/*
+
+
+
+		/*
 			textures[i].texVerts[0] = textures[i].x/(atlasWidth-1);
 			textures[i].texVerts[1] = (atlasHeight-1-(textures[i].y+textures[i].img.height()-1))/(atlasHeight-1);
 
@@ -353,6 +388,7 @@ void TextureModel::LoadAtlas(QString path)
 	if (!loadedImage.load(path))
 		return;
 
+	/// search line that start with "////loadformat", when found-begin load textures data
 	bool startProcessLine = false;
 	while (!file.atEnd())
 	{
@@ -461,21 +497,15 @@ void TextureModel::SaveAtlas(QString path)
 
 	///
 	QFile fileH(dir+headerFName+".h");
-	QFile fileCPP(dir+headerFName+".cpp");
-	if ((fileH.open(QIODevice::WriteOnly | QIODevice::Text)) && (fileCPP.open(QIODevice::WriteOnly | QIODevice::Text)))
+	if (fileH.open(QIODevice::WriteOnly | QIODevice::Text))
 	{
 		QTextStream outH(&fileH);
-		QTextStream outCPP(&fileCPP);
 
 		outH << "#ifndef " << headerFName.toUpper() << "_H\n";
 		outH << "#define " << headerFName.toUpper() << "_H\n";
 		outH << "\n//Created by Texture Atlas Creator @milytia\n";
 
-		outCPP << "#include \"" << headerFName << ".h\"\n";
-		outCPP << "\n//Created by Texture Atlas Creator @milytia\n\n";
-
-
-		outCPP << "\n//{left_bottom, left_top, right_top, right_bottom}\n";
+		outH << "\n//Texture coordinates {left_bottom, left_top, right_top, right_bottom}\n";
 
 		qSort(textures.begin(), textures.end(), texLessThan);
 
@@ -493,48 +523,59 @@ void TextureModel::SaveAtlas(QString path)
 		}
 		*/
 
-		outH << "\nextern float " << headerFName << "[" << textures.size() << "][8];\n";
-		outCPP << "\nfloat " << headerFName << "[" << textures.size() << "][8] = { ";
+		outH << "\nstatic const float " << headerFName << "[" << textures.size() << "][8] = { ";
 		for (int i=0; i<textures.size(); i++)
 		{
-			outCPP << "{";
+			outH << "{";
 			for (int p=0; p<7; p++)
-				outCPP << textures[i].texVerts[p] << ", ";
-			outCPP << textures[i].texVerts[7] << "}";
+				outH << textures[i].texVerts[p] << ", ";
+			outH << textures[i].texVerts[7] << "}";
 			if (i < (textures.size()-1))
-				outCPP << ",";
-			outCPP << "//\t" << textures[i].name << " - " << i << "\n";
+				outH << ",";
+			outH << "//\t" << textures[i].name << " - " << i << "\n";
 
 		}
-		outCPP << "};\n";
+		outH << "};\n\n";
 
 		//FIXME:
-		outCPP << "//{width,height}\n";
-		outH << "\nextern float " << "size_" << headerFName << "[" << textures.size() << "][2];\n";
-		outCPP << "\nfloat " << "size_" << headerFName << "[" << textures.size() << "][2] = { ";
+		outH << "//{width,height}\n";
+		outH << "static const float " << "size_" << headerFName << "[" << textures.size() << "][2] = { ";
 		for (int i=0; i<textures.size(); i++)
 		{
-			outCPP << "{" << textures[i].img.width() << ", "<< textures[i].img.height() << "}";
+			outH << "{" << textures[i].img.width() << ", "<< textures[i].img.height() << "}";
 			if (i < (textures.size()-1))
-				outCPP << ",";
-			outCPP << "//" << textures[i].name << " - " << i << "\n";
+				outH << ",";
+			outH << "//" << textures[i].name << " - " << i << "\n";
 		}
-		outCPP << "};\n";
+		outH << "};\n\n";
 
-		outH << "\nextern float " << "wh_" << headerFName << "[" << textures.size() << "];\n";
-		outCPP << "\nfloat " << "wh_" << headerFName << "[" << textures.size() << "] = { ";
+		outH << "///{width/height}\n";
+		outH << "\nstatic const float " << "wh_" << headerFName << "[" << textures.size() << "] = { ";
 		for (int i=0; i<textures.size(); i++)
 		{
-			outCPP << (float)textures[i].img.width()/(float)textures[i].img.height();
+			outH << (float)textures[i].img.width()/(float)textures[i].img.height();
 			if (i < (textures.size()-1))
-				outCPP << ",";
-			outCPP << "//" << textures[i].name << " - " << i << "\n";
+				outH << ",";
+			outH << "//" << textures[i].name << " - " << i << "\n";
 		}
-		outCPP << "};\n";
+		outH << "};\n";
+
+		///////////
+		QString sizeS = "size_" + headerFName;
+
+		outH << "static void drawTexture" << headerFName.toUpper() << "AtPoint(int tex, float x, float y, float z) {" << "\n";
+		outH << "   glPushMatrix();" << "\n";
+		outH << "   glTexCoordPointer(2, GL_FLOAT, 0, " << headerFName << "[tex]);" << "\n";
+		outH << "   glTranslatef(x, y, z);" << "\n";
+		outH << "   glScalef(" << sizeS << "[tex][0], " << sizeS << "[tex][1], 1);" << "\n";
+		outH << "   glDrawArrays(GL_TRIANGLE_FAN, 0, 4);" << "\n";
+		outH << "   glPopMatrix();" << "\n";
+		outH << "}" << "\n";
+		///////////
 
 		outH << "#endif\n";
 
-		outH << "////loadformat\n";
+		outH << "////loadformat  (x,y,width,height)\n";
 		for (int i=0; i<textures.size(); i++)
 		{
 			outH << "//" << textures[i].name << "=" << textures[i].x << "," << textures[i].y << ","
