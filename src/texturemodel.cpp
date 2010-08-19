@@ -563,7 +563,7 @@ void TextureModel::SaveAtlas(QString path)
 		///////////
 		QString sizeS = "size_" + headerFName;
 
-		outH << "static void drawTexture" << headerFName.toUpper() << "AtPoint(int tex, float x, float y, float z) {" << "\n";
+		outH << "static void "<< headerFName << "_drawTextureAtPoint(int tex, float x, float y, float z) {" << "\n";
 		outH << "   glPushMatrix();" << "\n";
 		outH << "   glTexCoordPointer(2, GL_FLOAT, 0, " << headerFName << "[tex]);" << "\n";
 		outH << "   glTranslatef(x, y, z);" << "\n";

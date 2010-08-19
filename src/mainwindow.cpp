@@ -12,6 +12,8 @@ MainWindow::MainWindow()
 {
 	ui.setupUi(this);
 
+	this->setWindowTitle(tr("Texture Atlas Maker v0.9  (19-08-2010)"));
+
 	proccesWidget = new QWidget(this);//, Qt::ToolTip);
 	proccesWidget->setStyleSheet("QLabel {"
 			 "background-color: green;"
