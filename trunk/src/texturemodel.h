@@ -18,6 +18,11 @@ struct fsRect{
 	fsRect(float _x=0,float _y=0,float _w=0,float _h=0):x(_x),y(_y),w(_w),h(_h) {}
 };
 
+struct CPoint
+{
+	float x,y;
+	CPoint(float _x=0.0,float _y=0.0):x(_x),y(_y){}
+};
 
 class TextureModel : public QAbstractItemModel
 {
@@ -82,6 +87,9 @@ public slots:
 	void arrangeImages();//
 	void makeAtlas();
 	void setAtlasSize(int w, int h);/// change atlas size
+private:
+	CPoint pixelSpaceToUVSpace(CPoint xy);
+	void pixelCoordToUVCoord(TTexture *texItem);
 public:
 	QImage resultImage;
 	QVector <TTexture> textures;
