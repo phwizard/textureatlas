@@ -18,6 +18,7 @@ void WorkArea::setTextureModel(TextureModel *_textureModel)
 
 	connect(textureModel,SIGNAL(atlasTextureUpdated()), this,SLOT(update()));
 	connect(textureModel,SIGNAL(textureDeleted()), this,SLOT(textureDeleted()));
+	connect(textureModel,SIGNAL(selectionChanged()), this,SLOT(update()));
 }
 
 void WorkArea::drawChessBoard(QPainter *painter)
@@ -71,13 +72,22 @@ void WorkArea::paintEvent(QPaintEvent *event)
 
 		painter.setPen(pen);
 
+		QPen penMarked;
+		penMarked.setStyle(Qt::DotLine);
+		penMarked.setBrush(Qt::darkMagenta);
+
 		for (int i=0; i<textureModel->textures.size(); i++)
 		{
+			if (textureModel->textures[i].markSelected)
+				painter.setPen(penMarked);
+			else
+				painter.setPen(pen);
 			painter.drawImage(textureModel->textures[i].x, textureModel->textures[i].y, textureModel->textures[i].img);
 
 			painter.drawRect(textureModel->textures[i].x, textureModel->textures[i].y,
 							 textureModel->textures[i].img.width(), textureModel->textures[i].img.height());
 		}
+
 
 		if (selectedTexture)
 		{

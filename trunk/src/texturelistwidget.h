@@ -8,15 +8,21 @@
 #include <QDragMoveEvent>
 #include <QDropEvent>
 #include <QUrl>
+#include <QFileDialog>
 
 #include "texturemodel.h"
 
 
 class TextureListWidget : public QListView
 {
+	Q_OBJECT
+
 public:
 	TextureListWidget(QWidget *parent = 0);
 
+protected slots:
+	void itemClicked();
+	void saveSelectedImages();
 protected:
 	void dragEnterEvent(QDragEnterEvent *event);
 	void dragMoveEvent(QDragMoveEvent *event);
