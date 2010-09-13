@@ -9,13 +9,16 @@
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QProgressBar>
-
+#include <QToolBar>
+#include <QToolButton>
+#include <QComboBox>
 
 
 #include "ui_mainform.h"
 
 #include "texturemodel.h"
-#include "atlasthread.h"
+//#include "atlasthread.h"
+#include "texturelistwidget.h"
 
 
 class MainWindow : public QMainWindow
@@ -52,10 +55,13 @@ private:
 
 	QString fullFileName;
 
-	AtlasThread *atlasThread;
+	//AtlasThread *atlasThread;
 	QLabel *processLabel;/// label, showed when thread make atlas
 	QWidget *proccesWidget;
 	QProgressBar *progressBar;
+
+	QComboBox *comboBoxResolution;
+	QString lastDir;
 };
 
 #endif // MAINWINDOW_H

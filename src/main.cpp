@@ -3,7 +3,7 @@
 
 #include "mainwindow.h"
 
-
+/// Add multi selection in tree.
 
 int main(int argc, char *argv[])
 {
@@ -14,20 +14,6 @@ int main(int argc, char *argv[])
 	QTextCodec::setCodecForCStrings(codec);
 	QTextCodec::setCodecForLocale(codec);
 	QTextCodec::setCodecForTr(codec);
-
-
-	QRegExp regExp("\\d+$");
-	QString str = "the mini56mum024";
-	int pos = str.indexOf(regExp, 0);
-	if (pos!=-1)
-	{
-		QString texName = str.left(pos);
-		QString textNum = str.right(str.length()-pos);
-		qDebug() << texName;
-		qDebug() << textNum;
-		int n = textNum.toInt();
-		qDebug() << n;
-	}
 
 	MainWindow w;
 	w.show();

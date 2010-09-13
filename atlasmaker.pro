@@ -15,16 +15,14 @@ SOURCES += src/main.cpp \
     tinyxml/tinystr.cpp \
     src/texturemodel.cpp \
     src/texturelistwidget.cpp \
-    src/workarea.cpp \
-    src/atlasthread.cpp
+	src/workarea.cpp
 HEADERS += src/mainwindow.h \
     tinyxml/tinyxml.h \
     tinyxml/tinystr.h \
     src/texturemodel.h \
     src/texturelistwidget.h \
     src/workarea.h \
-    src/common.h \
-    src/atlasthread.h
+	src/common.h
 FORMS += src/mainform.ui
 RESOURCES += src/texture.qrc
 OBJECTS_DIR = obj

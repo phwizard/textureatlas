@@ -13,7 +13,12 @@ struct TTexture
 
 	int x,y;
 	bool isPacked;
+	bool markSelected;
 	//QRectF rect;
+	TTexture()
+	{
+		markSelected=false;
+	}
 };
 
 #endif // COMMON_H

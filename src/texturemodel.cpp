@@ -64,11 +64,54 @@ int TextureModel::addTexture(QString path, bool mustRemakeAtlas)
 
 int TextureModel::addTextures(QStringList pathList)
 {
+	if (pathList.size()==0)
+		return 0;
 	for (int i=0; i<pathList.size(); i++)
 		addTexture(pathList.at(i), false);
 	arrangeImages();
 	return 0;
 }
+
+void TextureModel::addDir(QString _dirPath)
+{
+	QStringList listPathTextures = findFilesInDir(_dirPath);
+	if (listPathTextures.size()>0)
+		addTextures(listPathTextures);
+}
+
+
+QStringList TextureModel::findFilesInDir(QString _dirPath)
+{
+	QStringList resList;
+	QDir dir(_dirPath);
+	//dir.setPath();
+	dir.setFilter(QDir::Files | QDir::NoSymLinks | QDir::NoDotAndDotDot);
+	QStringList filters;
+	filters << "*";
+	dir.setNameFilters(filters);
+
+	QStringList listFiles = dir.entryList();
+
+	for (int i = 0; i < listFiles.size(); ++i)
+	{
+		//qDebug() << listFiles.at(i);
+		resList.push_back(_dirPath+dir.separator()+listFiles.at(i));
+	}
+
+
+	QDir dir2(_dirPath);
+	//dir.setPath();
+	dir2.setFilter(QDir::Dirs | QDir::NoSymLinks | QDir::NoDotAndDotDot);
+	dir2.setNameFilters(filters);
+	QStringList listDirs = dir2.entryList();
+	for (int i = 0; i < listDirs.size(); ++i)
+	{
+		resList.append(findFilesInDir(_dirPath+dir.separator()+listDirs.at(i)));
+	}
+
+	return resList;
+}
+
 
 QModelIndex TextureModel::index(int row, int column, const QModelIndex &parent) const
 {
@@ -211,9 +254,25 @@ void TextureModel::arrangeImages()
 
 	emit currentProgress(0);
 
+	QProgressDialog progress(tr("Arrange images..."), tr("Cancel"), 0, 100, 0);
+	progress.setWindowModality(Qt::WindowModal);
+
+
 	for (int i=0; i<textures.size(); i++)
 		for (int j=i; j<textures.size(); j++)
 		{
+			progress.setValue((currentStep*100)/countSteps);
+			if (progress.wasCanceled())
+			{
+				for (int t=0; t<textures.size(); t++)
+				{
+					textures[t].x = optimTex[t].x();
+					textures[t].y = optimTex[t].y();
+				}
+				makeAtlas();
+				return;
+			}
+
 			qSwap(tempTextures[i], tempTextures[j]);
 
 			fsRect S;
@@ -266,8 +325,7 @@ void TextureModel::arrangeImages()
 			}
 
 			currentStep++;
-			currentPercent = (currentStep*100)/countSteps;
-			emit currentProgress(currentPercent);
+			//emit currentProgress(currentPercent);
 		}
 
 	for (int t=0; t<textures.size(); t++)
@@ -275,6 +333,8 @@ void TextureModel::arrangeImages()
 		textures[t].x = optimTex[t].x();
 		textures[t].y = optimTex[t].y();
 	}
+
+	progress.setValue(100);
 
 	makeAtlas();
 
@@ -486,7 +546,15 @@ void TextureModel::SaveAtlas(QString path)
 	QString headerFName = path;
 
 	if (fileName.endsWith(".png",Qt::CaseInsensitive))
+	{
 		headerFName = fileName.left(fileName.size()-4);
+		imageFullPath = path;
+	}
+	else if (fileName.endsWith(".h",Qt::CaseInsensitive))
+	{
+		headerFName = fileName.left(fileName.size()-2);
+		imageFullPath = path.left(path.size()-2)+".png";
+	}
 	else
 	{
 		imageFullPath = path+".png";
@@ -593,4 +661,39 @@ void TextureModel::setAtlasSize(int w, int h)
 	atlasHeight=h;
 	resultImage = QImage(QSize(atlasWidth,atlasHeight), QImage::Format_ARGB32_Premultiplied);
 	arrangeImages();
+}
+
+void TextureModel::selectItems(QModelIndexList &selectedInd)
+{
+
+	for (int i=0; i<textures.size(); i++)
+		textures[i].markSelected=false;
+
+	if (selectedInd.count()==0)
+		return;
+	for (int i=0; i<selectedInd.count(); i++)
+	{
+		int num = selectedInd.at(i).row();
+		if ((num>=0) && (num<textures.size()))
+		{
+			textures[num].markSelected=true;
+		}
+	}
+	emit selectionChanged();
+}
+
+void TextureModel::saveSelectedImages(QString _dir, QModelIndexList &selectedInd)
+{
+	qDebug() << "============== " << selectedInd.count();
+	for (int i=0; i<selectedInd.count(); i++)
+	{
+		int num = selectedInd.at(i).row();
+		qDebug() << "    num=" << num;
+		if ((num>=0) && (num<textures.size()))
+		{
+			qDebug() << (_dir+QDir::separator()+textures[num].name);
+			textures[num].img.save(_dir+QDir::separator()+textures[num].name+".png");
+		}
+	}
+
 }
