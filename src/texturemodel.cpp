@@ -484,7 +484,8 @@ void TextureModel::LoadAtlas(QString path)
 				startProcessLine =true;
 	}
 
-	setAtlasSize(loadedImage.width(), loadedImage.height());
+	setAtlasSize(loadedImage.width(), loadedImage.height(),false);
+	makeAtlas();
 	reset();
 }
 
@@ -655,12 +656,13 @@ void TextureModel::SaveAtlas(QString path)
 	}
 }
 
-void TextureModel::setAtlasSize(int w, int h)
+void TextureModel::setAtlasSize(int w, int h, bool _remakeAtlas)
 {
 	atlasWidth=w;
 	atlasHeight=h;
 	resultImage = QImage(QSize(atlasWidth,atlasHeight), QImage::Format_ARGB32_Premultiplied);
-	arrangeImages();
+	if (_remakeAtlas)
+		arrangeImages();
 }
 
 void TextureModel::selectItems(QModelIndexList &selectedInd)

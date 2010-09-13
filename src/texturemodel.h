@@ -115,7 +115,7 @@ public slots:
 	void clear();
 	void arrangeImages();//
 	void makeAtlas();
-	void setAtlasSize(int w, int h);/// change atlas size
+	void setAtlasSize(int w, int h, bool _remakeAtlas=true);/// change atlas size
 private:
 	CPoint pixelSpaceToUVSpace(CPoint xy);
 	void pixelCoordToUVCoord(TTexture *texItem);
