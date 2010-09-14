@@ -7,12 +7,17 @@
  #include <QSlider>
  #include <QLabel>
  #include <QTimer>
+#include <QSettings>
+
 
 MainWindow::MainWindow()
 {
 	ui.setupUi(this);
 
 	this->setWindowTitle(tr("Texture Atlas Maker v0.94  (14-09-2010)"));
+
+
+	readSettings();
 
 ///////////////////////////////////////////////
 	QGridLayout *gridLayout_2 = new QGridLayout(ui.page_textures);
@@ -68,45 +73,6 @@ MainWindow::MainWindow()
 	gridLayout_2->addWidget(toolButtonAddResolution, 3, 2, 1, 1);
 ////////////////////////////////////////
 
-
-
-	proccesWidget = new QWidget(this);//, Qt::ToolTip);
-	proccesWidget->setStyleSheet("QLabel {"
-			 "background-color: green;"
-			 "border-style: outset;"
-			 "border-width: 2px;"
-			 "border-radius: 10px;"
-			 "border-color: beige;"
-			 "font: bold 14px;"
-			 "min-width: 10em;"
-			 "padding: 6px;"
-			 "color:white;}"
-			"QProgressBar::chunk {"
-							"background-color: #00CE00;"
-							"width: 10px;"
-							"margin: 0.5px;};"
-			);
-
-	QVBoxLayout *verticalLayout = new QVBoxLayout(proccesWidget);
-	processLabel = new QLabel("Wait...\nmaking atlas...", proccesWidget);
-	processLabel->setAlignment(Qt::AlignCenter);
-	verticalLayout->addWidget(processLabel);
-
-	progressBar = new QProgressBar(proccesWidget);
-
-	progressBar->setValue(0);
-	progressBar->setMinimum(0);
-	progressBar->setMaximum(100);
-	progressBar->setAlignment(Qt::AlignCenter);
-	progressBar->setTextVisible(true);
-	progressBar->setInvertedAppearance(false);
-	progressBar->setTextDirection(QProgressBar::TopToBottom);
-
-	verticalLayout->addWidget(progressBar);
-
-	//proccesWidget->resize(100,100);
-	proccesWidget->adjustSize();
-	proccesWidget->hide();
 	/////////////////
 
 
@@ -179,20 +145,34 @@ MainWindow::MainWindow()
 
 	comboBoxResolution->setCurrentIndex(1);
 	resolutionAtlasChange();
-
-	/*
-	connect(atlasThread,SIGNAL(processStarted()), this,SLOT(processStarted()));
-	connect(atlasThread,SIGNAL(processEnded()), this,SLOT(processEnded()));
-	*/
-
-
-	connect(textureModel,SIGNAL(currentProgress(int)), progressBar,SLOT(setValue(int)));
 }
 
 MainWindow::~MainWindow()
 {
-	//delete proccesWidget;
+	writeSettings();
 }
+
+
+void MainWindow::readSettings()
+{
+	QSettings settings(QSettings::IniFormat, QSettings::UserScope,
+					   QCoreApplication::organizationName(), QCoreApplication::applicationName());
+
+	settings.beginGroup("general");
+	lastDir = settings.value("last_path", QString("")).toString();
+	settings.endGroup();
+}
+
+void MainWindow::writeSettings()
+{
+	QSettings settings(QSettings::IniFormat, QSettings::UserScope,
+					   QCoreApplication::organizationName(), QCoreApplication::applicationName());
+
+	settings.beginGroup("general");
+	settings.setValue("last_path", lastDir);
+	settings.endGroup();
+}
+
 
 void MainWindow::resolutionAtlasChange()
 {
@@ -328,23 +308,6 @@ void MainWindow::AddNewResolution()
 	}
 }
 
-void MainWindow::processStarted()
-{
-	/*
-	ui.workArea->setUpdatesEnabled(false);
-	progressBar->setValue(0);
-	proccesWidget->show();
-	*/
-	//proccesWidget->move(this->pos()+QPoint(this->width()/2-proccesWidget->width()/2,this->height()/2-proccesWidget->height()/2));
-}
-
-void MainWindow::processEnded()
-{
-	/*
-	proccesWidget->hide();
-	ui.workArea->setUpdatesEnabled(true);
-	*/
-}
 
 void MainWindow::CantMakeAtlas()
 {

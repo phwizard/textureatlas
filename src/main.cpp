@@ -15,6 +15,10 @@ int main(int argc, char *argv[])
 	QTextCodec::setCodecForLocale(codec);
 	QTextCodec::setCodecForTr(codec);
 
+	QCoreApplication::setOrganizationName("milytia");
+	//QCoreApplication::setOrganizationDomain("");
+	QCoreApplication::setApplicationName("texture_atlas_maker");
+
 	MainWindow w;
 	w.show();
 	//w.move(800,200);
