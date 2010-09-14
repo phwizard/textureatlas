@@ -29,6 +29,9 @@ public:
 	MainWindow();
 	~MainWindow();
 
+	void readSettings();
+	void writeSettings();
+
 public slots:
 	void loadFile();
 	bool save();
@@ -47,9 +50,6 @@ private slots:
 	void resolutionAtlasChange();/// change atlas size
 	void AddNewResolution();
 
-	void processStarted();
-	void processEnded();
-
 private:
 	Ui::MainWindow ui;
 	TextureModel *textureModel;
@@ -57,9 +57,6 @@ private:
 	QString curFileName;
 
 	//AtlasThread *atlasThread;
-	QLabel *processLabel;/// label, showed when thread make atlas
-	QWidget *proccesWidget;
-	QProgressBar *progressBar;
 
 	QComboBox *comboBoxResolution;
 	QString lastDir;
