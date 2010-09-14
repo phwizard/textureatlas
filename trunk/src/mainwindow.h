@@ -31,8 +31,9 @@ public:
 
 public slots:
 	void loadFile();
-	bool saveFile();
-	bool saveFileAs();
+	bool save();
+	bool saveAs();
+	bool saveFile(QString _fullPath);
 
 	void AddFile();
 	void AddFolder();
@@ -53,7 +54,7 @@ private:
 	Ui::MainWindow ui;
 	TextureModel *textureModel;
 
-	QString fullFileName;
+	QString curFileName;
 
 	//AtlasThread *atlasThread;
 	QLabel *processLabel;/// label, showed when thread make atlas

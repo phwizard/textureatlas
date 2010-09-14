@@ -12,22 +12,7 @@ MainWindow::MainWindow()
 {
 	ui.setupUi(this);
 
-	this->setWindowTitle(tr("Texture Atlas Maker v0.94  (13-09-2010)"));
-
-
-	QAction *bindingAction = ui.toolBar->addAction(tr("binding"));
-	bindingAction->setCheckable(true);
-	bindingAction->setChecked(false);
-	QAction *remakeAction = ui.toolBar->addAction(tr("remake"));
-	QAction *loadAction = ui.toolBar->addAction(QIcon(""), tr("&Open"));
-	loadAction->setShortcut(QKeySequence::Open);
-	QAction *saveAction = ui.toolBar->addAction(QIcon(""), tr("Save"));
-	saveAction->setShortcut(QKeySequence::Save);
-
-	QMenu *fileMenuAct = ui.menubar->addMenu(tr("File"));
-	fileMenuAct->addAction(loadAction);
-	fileMenuAct->addAction(saveAction);
-
+	this->setWindowTitle(tr("Texture Atlas Maker v0.94  (14-09-2010)"));
 
 ///////////////////////////////////////////////
 	QGridLayout *gridLayout_2 = new QGridLayout(ui.page_textures);
@@ -47,27 +32,30 @@ MainWindow::MainWindow()
 	QToolButton *toolButtonAddFile = new QToolButton(ui.page_textures);
 	toolButtonAddFile->setText(tr("add file"));
 	toolButtonAddFile->setObjectName(QString::fromUtf8("toolButtonAddFile"));
-
-	gridLayout_2->addWidget(toolButtonAddFile, 1, 0, 1, 1);
-
-	QToolButton *toolButtonClear = new QToolButton(ui.page_textures);
-	toolButtonClear->setText(tr("clear"));
-	toolButtonClear->setObjectName(QString::fromUtf8("toolButtonClear"));
-	gridLayout_2->addWidget(toolButtonClear, 1, 2, 1, 1);
+	gridLayout_2->addWidget(toolButtonAddFile, 1, 0, 1, 2);
 
 	QToolButton *toolButtonAddFolder = new QToolButton(ui.page_textures);
 	toolButtonAddFolder->setText(tr("add folder"));
 	toolButtonAddFolder->setObjectName(QString::fromUtf8("toolButtonAddFolder"));
-	gridLayout_2->addWidget(toolButtonAddFolder, 1, 1, 1, 1);
+	gridLayout_2->addWidget(toolButtonAddFolder, 2, 0, 1, 2);
 
 	QToolButton *toolExport = new QToolButton(ui.page_textures);
 	toolExport->setText(tr("export"));
-	gridLayout_2->addWidget(toolExport, 1, 3, 1, 1);
+	toolExport->setToolTip(tr("Export selected images"));
+	gridLayout_2->addWidget(toolExport, 1, 2, 1, 2);
+
+
+	QToolButton *toolButtonClear = new QToolButton(ui.page_textures);
+	toolButtonClear->setText(tr("clear"));
+	toolButtonClear->setObjectName(QString::fromUtf8("toolButtonClear"));
+	gridLayout_2->addWidget(toolButtonClear, 2, 2, 1, 2);
+
+
 
 
 	comboBoxResolution = new QComboBox(ui.page_textures);
 	comboBoxResolution->setObjectName(QString::fromUtf8("comboBoxResolution"));
-	gridLayout_2->addWidget(comboBoxResolution, 2, 0, 1, 2);
+	gridLayout_2->addWidget(comboBoxResolution, 3, 0, 1, 2);
 
 
 
@@ -77,7 +65,7 @@ MainWindow::MainWindow()
 	toolButtonAddResolution->setObjectName(QString::fromUtf8("toolButtonAddResolution"));
 	toolButtonAddResolution->setArrowType(Qt::NoArrow);
 
-	gridLayout_2->addWidget(toolButtonAddResolution, 2, 2, 1, 1);
+	gridLayout_2->addWidget(toolButtonAddResolution, 3, 2, 1, 1);
 ////////////////////////////////////////
 
 
@@ -137,9 +125,6 @@ MainWindow::MainWindow()
 	ui.workArea->setUpdatesEnabled(true);
 	ui.workArea->update();
 
-	connect(remakeAction,SIGNAL(triggered(bool)), textureModel,SLOT(arrangeImages()));
-	connect(loadAction,SIGNAL(triggered(bool)), this,SLOT(loadFile()));
-	connect(saveAction,SIGNAL(triggered(bool)), this,SLOT(saveFileAs()));
 
 	connect(toolButtonAddFile,SIGNAL(clicked(bool)), this,SLOT(AddFile()));
 	connect(toolButtonAddFolder,SIGNAL(clicked(bool)), this,SLOT(AddFolder()));
@@ -150,8 +135,42 @@ MainWindow::MainWindow()
 	connect(comboBoxResolution,SIGNAL(currentIndexChanged(int)), this,SLOT(resolutionAtlasChange()));
 	connect(toolButtonAddResolution,SIGNAL(clicked(bool)), this,SLOT(AddNewResolution()));
 
-	connect(bindingAction, SIGNAL(triggered(bool)),
-					ui.workArea,SLOT(setBinding(bool)));
+
+
+	QAction *bindingAction = ui.toolBar->addAction(tr("binding"));
+	bindingAction->setCheckable(true);
+	bindingAction->setChecked(false);
+	connect(bindingAction, SIGNAL(triggered(bool)), ui.workArea,SLOT(setBinding(bool)));
+
+	QAction *remakeAction = ui.toolBar->addAction(tr("remake"));
+	connect(remakeAction,SIGNAL(triggered(bool)), textureModel,SLOT(arrangeImages()));
+
+	QAction *loadAction = new QAction(tr("&Open"), this);
+	connect(loadAction,SIGNAL(triggered(bool)), this,SLOT(loadFile()));
+	loadAction->setShortcut(QKeySequence::Open);
+
+	QAction *saveAction = new QAction(tr("&Save"), this);
+	saveAction->setShortcut(QKeySequence::Save);
+	connect(saveAction,SIGNAL(triggered(bool)), this,SLOT(save()));
+
+	QAction *saveAsAct = new QAction(tr("Save &As..."), this);
+	saveAsAct->setShortcuts(QKeySequence::SaveAs);
+	saveAsAct->setStatusTip(tr("Save the atlas under a new name"));
+	connect(saveAsAct, SIGNAL(triggered()), this, SLOT(saveAs()));
+
+	QAction *exitAct = new QAction(tr("E&xit"), this);
+	exitAct->setShortcuts(QKeySequence::Quit);
+	exitAct->setStatusTip(tr("Exit the application"));
+	connect(exitAct, SIGNAL(triggered()), this, SLOT(close()));
+
+	QMenu *fileMenuAct = ui.menubar->addMenu(tr("File"));
+	fileMenuAct->addAction(loadAction);
+	fileMenuAct->addSeparator();
+	fileMenuAct->addAction(saveAction);
+	fileMenuAct->addAction(saveAsAct);
+	fileMenuAct->addSeparator();
+	fileMenuAct->addAction(exitAct);
+
 
 	ui.workArea->setBinding(bindingAction->isChecked());
 
@@ -186,13 +205,13 @@ void MainWindow::resolutionAtlasChange()
 
 void MainWindow::setCurrentFileName(const QString &fileName)
 {
-	this->fullFileName = fileName;
+	this->curFileName = fileName;
 
 	QString shownName;
-	if (fullFileName.isEmpty())
+	if (curFileName.isEmpty())
 		shownName = "untitled";
 	else
-		shownName = QFileInfo(fullFileName).fileName();
+		shownName = QFileInfo(curFileName).fileName();
 
 	setWindowTitle(shownName);
 	setWindowModified(false);
@@ -219,34 +238,44 @@ void MainWindow::loadFile()
 	}
 }
 
-bool MainWindow::saveFileAs()
+
+bool MainWindow::saveAs()
 {
 	QString fn = QFileDialog::getSaveFileName(this, tr("Save Atlas"),
 					lastDir,	QString());
 	if (fn.isEmpty())
 		return false;
-	setCurrentFileName(fn);
-	return saveFile();
+	return saveFile(fn);
 }
 
-bool MainWindow::saveFile()
+
+bool MainWindow::save()
 {
-	if (fullFileName.isEmpty())
-		return saveFileAs();
+	if (curFileName.isEmpty())
+		return saveAs();
+	else
+		return saveFile(curFileName);
+}
 
 
-	QFileInfo fi(fullFileName);
+bool MainWindow::saveFile(QString _fullPath)
+{
+	QFileInfo fi(_fullPath);
 	QString dir = fi.path();
 	if (dir.at(dir.length()-1) !=  QDir::separator())
 		dir.append(QDir::separator());
 	lastDir = dir;
 
 	ui.workArea->setUpdatesEnabled(false);
-	textureModel->SaveAtlas(fullFileName);
+	textureModel->SaveAtlas(_fullPath);
 	ui.workArea->setUpdatesEnabled(true);
 	ui.workArea->update();
+
+	setCurrentFileName(_fullPath);
+	statusBar()->showMessage(tr("File saved"), 2000);
 	return true;
 }
+
 
 void MainWindow::AddFile()
 {
