@@ -215,6 +215,7 @@ void MainWindow::loadFile()
 		textureModel->LoadAtlas(path);
 		ui.workArea->setUpdatesEnabled(true);
 		ui.workArea->update();
+		setCurrentFileName(path);
 	}
 }
 
