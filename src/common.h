@@ -18,6 +18,8 @@ struct TTexture
 	TTexture()
 	{
 		markSelected=false;
+		x=0;
+		y=0;
 	}
 };
 
