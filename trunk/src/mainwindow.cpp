@@ -111,6 +111,13 @@ MainWindow::MainWindow()
 	QAction *remakeAction = ui.toolBar->addAction(tr("remake"));
 	connect(remakeAction,SIGNAL(triggered(bool)), textureModel,SLOT(arrangeImages()));
 
+
+	QAction *autoRemakeAction = ui.toolBar->addAction(tr("auto arrange"));
+	autoRemakeAction->setCheckable(true);
+	autoRemakeAction->setChecked(textureModel->isAutoArrangeImages());
+	connect(autoRemakeAction, SIGNAL(triggered(bool)), textureModel,SLOT(setAutoArrangeImages(bool)));
+
+
 	QAction *loadAction = new QAction(tr("&Open"), this);
 	connect(loadAction,SIGNAL(triggered(bool)), this,SLOT(loadFile()));
 	loadAction->setShortcut(QKeySequence::Open);

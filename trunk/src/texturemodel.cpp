@@ -5,6 +5,8 @@ TextureModel::TextureModel(QObject *parent):QAbstractItemModel(parent)
 	atlasWidth = 1024.0;
 	atlasHeight = 1024.0;
 
+	autoArrangeImages=true;
+
 	resultImage = QImage(QSize(atlasWidth,atlasHeight), QImage::Format_ARGB32_Premultiplied);
 }
 
@@ -54,12 +56,12 @@ int TextureModel::addTexture(QString path, bool mustRemakeAtlas)
 	textures.last().texNum = textures.size()-1;
 	endInsertRows();
 
-	if (mustRemakeAtlas)
+	if ((mustRemakeAtlas) && (autoArrangeImages))
 		arrangeImages();
+	else
+		emit atlasTextureUpdated();
 
 	return (textures.size()-1);
-
-	return -1;
 }
 
 int TextureModel::addTextures(QStringList pathList)
@@ -68,7 +70,10 @@ int TextureModel::addTextures(QStringList pathList)
 		return 0;
 	for (int i=0; i<pathList.size(); i++)
 		addTexture(pathList.at(i), false);
-	arrangeImages();
+	if (autoArrangeImages)
+		arrangeImages();
+	else
+		emit atlasTextureUpdated();
 	return 0;
 }
 
@@ -661,8 +666,10 @@ void TextureModel::setAtlasSize(int w, int h, bool _remakeAtlas)
 	atlasWidth=w;
 	atlasHeight=h;
 	resultImage = QImage(QSize(atlasWidth,atlasHeight), QImage::Format_ARGB32_Premultiplied);
-	if (_remakeAtlas)
+	if ((_remakeAtlas) && (autoArrangeImages))
 		arrangeImages();
+	else
+		emit atlasTextureUpdated();
 }
 
 void TextureModel::selectItems(QModelIndexList &selectedInd)

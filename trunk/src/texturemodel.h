@@ -79,7 +79,7 @@ public:
 				textures.remove(i,1);
 
 				makeAtlas();
-				reset();//FXIME:переделать на beginDelete
+				reset();//FIXME:переделать на beginDelete
 				emit textureDeleted();
 			}
 	}
@@ -103,6 +103,8 @@ public:
 
 	void recursivePacking(fsRect *S2);
 
+	bool isAutoArrangeImages() const { return autoArrangeImages; }
+
 signals:
 	void atlasTextureUpdated();
 	void textureDeleted();
@@ -116,6 +118,8 @@ public slots:
 	void arrangeImages();//
 	void makeAtlas();
 	void setAtlasSize(int w, int h, bool _remakeAtlas=true);/// change atlas size
+	void setAutoArrangeImages(bool _on=true){ autoArrangeImages = _on; }
+	void unsetAutoArrangeImages(){ setAutoArrangeImages(false); }
 private:
 	CPoint pixelSpaceToUVSpace(CPoint xy);
 	void pixelCoordToUVCoord(TTexture *texItem);
@@ -128,6 +132,9 @@ public:
 
 	float atlasWidth;
 	float atlasHeight;
+
+private:
+	bool autoArrangeImages;//!< Авторасстановка текстур(при добавлении).
 };
 
 #endif // TEXTUREMODEL_H
