@@ -4,7 +4,7 @@
 QT += gui \
     console
 TARGET = textureatlasmaker
-
+CONFIG += release
 # DESTDIR = release
 TEMPLATE = app
 SOURCES += src/main.cpp \

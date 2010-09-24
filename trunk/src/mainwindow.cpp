@@ -14,7 +14,7 @@ MainWindow::MainWindow()
 {
 	ui.setupUi(this);
 
-	this->setWindowTitle(tr("Texture Atlas Maker v0.94  (14-09-2010)"));
+	this->setWindowTitle(tr("Texture Atlas Maker v0.94  (24-09-2010)"));
 
 
 	readSettings();
