@@ -129,7 +129,6 @@ void TextureListWidget::keyPressEvent(QKeyEvent *event)
 
 void TextureListWidget::itemClicked()
 {
-	qDebug() << "++";
 	TextureModel *_model = qobject_cast<TextureModel *>(this->model());
 	if (_model)
 	{
