@@ -7,23 +7,17 @@
 #include <QIcon>
 #include <QFileInfo>
 #include <QPainter>
+
 #include <QDebug>
 #include <QDir>
 #include <QProgressDialog>
+
 #include <vector>
 
 #include "common.h"
+#include "arrangethread.h"
 
-struct fsRect{
-	float x,y,w,h;
-	fsRect(float _x=0,float _y=0,float _w=0,float _h=0):x(_x),y(_y),w(_w),h(_h) {}
-};
 
-struct CPoint
-{
-	float x,y;
-	CPoint(float _x=0.0,float _y=0.0):x(_x),y(_y){}
-};
 
 class TextureModel : public QAbstractItemModel
 {
@@ -101,7 +95,7 @@ public:
 
 	void SaveAtlas(QString path);
 
-	void recursivePacking(fsRect *S2);
+
 
 	bool isAutoArrangeImages() const { return autoArrangeImages; }
 
@@ -120,6 +114,10 @@ public slots:
 	void setAtlasSize(int w, int h, bool _remakeAtlas=true);/// change atlas size
 	void setAutoArrangeImages(bool _on=true){ autoArrangeImages = _on; }
 	void unsetAutoArrangeImages(){ setAutoArrangeImages(false); }
+	void cancel();
+private slots:
+	void arranged();
+	void cantMakeAtlasSlot();
 private:
 	CPoint pixelSpaceToUVSpace(CPoint xy);
 	void pixelCoordToUVCoord(TTexture *texItem);
@@ -135,6 +133,9 @@ public:
 
 private:
 	bool autoArrangeImages;//!< Авторасстановка текстур(при добавлении).
+
+	ArrangeThread arrangeThread;
+	QProgressDialog *progressDialog;
 };
 
 #endif // TEXTUREMODEL_H

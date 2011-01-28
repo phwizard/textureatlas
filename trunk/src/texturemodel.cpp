@@ -1,5 +1,6 @@
 #include "texturemodel.h"
 
+
 TextureModel::TextureModel(QObject *parent):QAbstractItemModel(parent)
 {
 	atlasWidth = 1024.0;
@@ -8,11 +9,39 @@ TextureModel::TextureModel(QObject *parent):QAbstractItemModel(parent)
 	autoArrangeImages=true;
 
 	resultImage = QImage(QSize(atlasWidth,atlasHeight), QImage::Format_ARGB32_Premultiplied);
+
+
+	connect(&arrangeThread,SIGNAL(arranged()), this,SLOT(arranged()));
+	connect(&arrangeThread,SIGNAL(cantMakeAtlas()), this,SLOT(cantMakeAtlasSlot()));
+
+	progressDialog = new QProgressDialog("Operation in progress.", "Cancel", 0, 100);
+	//progressDialog->setAttribute(Qt::WA_DeleteOnClose, true);
+	progressDialog->setWindowModality(Qt::WindowModal);
+	progressDialog->setMinimumDuration(200);
+	connect(progressDialog, SIGNAL(canceled()), this, SLOT(cancel()));
+	connect(&arrangeThread, SIGNAL(changeProgress(int)), progressDialog, SLOT(setValue(int)));
+	connect(&arrangeThread, SIGNAL(cantMakeAtlas()), progressDialog, SLOT(cancel()));
+	connect(&arrangeThread, SIGNAL(arranged()), progressDialog, SLOT(cancel()));
+	connect(&arrangeThread, SIGNAL(canceled()), progressDialog, SLOT(cancel()));
 }
+
+
+void TextureModel::arranged()
+{
+	makeAtlas();
+}
+
+void TextureModel::cantMakeAtlasSlot()
+{
+	makeAtlas();
+	emit cantMakeAtlas();
+}
+
 
 TextureModel::~TextureModel()
 {
 	clear();
+	progressDialog->deleteLater();
 }
 
 
@@ -197,154 +226,29 @@ Qt::ItemFlags TextureModel::flags(const QModelIndex &index) const
 	return (Qt::ItemIsDragEnabled|Qt::ItemIsSelectable|Qt::ItemIsEnabled);
 }
 
-void TextureModel::recursivePacking(fsRect *S2)
-{
-	float dp=1;
-	for (int i=0; i<tempTextures.size(); i++)
-		if ((!tempTextures[i]->isPacked) &&((tempTextures[i]->img.width()+2*dp) <= S2->w) &&
-			(((tempTextures[i]->img.height()+2*dp) <= S2->h)))
-		{
-			tempTextures[i]->x = S2->x+dp;
-			tempTextures[i]->y = S2->y+dp;
-			tempTextures[i]->isPacked = true;
 
-			fsRect S3,S4;
-			S3 = fsRect(S2->x, S2->y+tempTextures[i]->img.height()+2*dp,
-						tempTextures[i]->img.width()+2*dp, S2->h - tempTextures[i]->img.height()-2*dp);
-			S4 = fsRect(S2->x+tempTextures[i]->img.width()+2*dp, S2->y,
-						S2->w - tempTextures[i]->img.width()-2*dp, S2->h);
-			if (S3.w*S3.h > S4.w*S4.h)
-			{
-				*S2 = S3;
-				recursivePacking(S2);
-				*S2 = S4;
-				recursivePacking(S2);
-			}
-			else
-			{
-				*S2 = S4;
-				recursivePacking(S2);
-				*S2 = S3;
-				recursivePacking(S2);
-			}
-		}
+void TextureModel::cancel()
+{
+	arrangeThread.cancel();
 }
+
 
 void TextureModel::arrangeImages()
 {
 	//bool cantMake=false;
+	progressDialog->setValue(0);
+	progressDialog->reset();
 
-	QVector <QPoint> optimTex;
-	tempTextures.clear();
-	for (int t=0; t<textures.size(); t++)
-	{
-		textures[t].texNum=t;
-		tempTextures.push_back(&textures[t]);
-		optimTex.push_back(QPoint(0,0));
-	}
-
-	float totalHeight = 0;
-	float minTotalHeight = 9999999;
-	float dp=1;
-
-	int countSteps = 0;
-	//FIXME:bad code
-	for (int i=0; i<textures.size(); i++)
-		for (int j=i; j<textures.size(); j++)
-			countSteps++;
-	if (countSteps==0)
-		countSteps=1;
-	int currentStep=0;
-	int currentPercent=0;
-
-	emit currentProgress(0);
-
-	QProgressDialog progress(tr("Arrange images..."), tr("Cancel"), 0, 100, 0);
-	progress.setWindowModality(Qt::WindowModal);
+	//
 
 
-	for (int i=0; i<textures.size(); i++)
-		for (int j=i; j<textures.size(); j++)
-		{
-			progress.setValue((currentStep*100)/countSteps);
-			if (progress.wasCanceled())
-			{
-				for (int t=0; t<textures.size(); t++)
-				{
-					textures[t].x = optimTex[t].x();
-					textures[t].y = optimTex[t].y();
-				}
-				makeAtlas();
-				return;
-			}
+	arrangeThread.arrangeImages(&textures, atlasWidth, atlasHeight);
 
-			qSwap(tempTextures[i], tempTextures[j]);
 
-			fsRect S;
-			S = fsRect(0,0, atlasWidth, -1);
-			totalHeight = 0;
-
-			for (int t=0; t<tempTextures.size(); t++)
-			{
-				tempTextures[t]->x = dp;
-				tempTextures[t]->y = dp;
-				tempTextures[t]->isPacked = false;
-			}
-
-			bool canMake = true;
-			for (int t=0; t<tempTextures.size(); t++)
-			{
-				if (tempTextures[t]->isPacked)
-					continue;
-
-				totalHeight += tempTextures[t]->img.height()+2*dp;
-
-				if ((tempTextures[t]->img.width()+2*dp) > atlasWidth)
-				{
-					canMake=false;
-					break;
-				}
-
-				tempTextures[t]->x = S.x+dp;
-				tempTextures[t]->y = S.y+dp;
-				tempTextures[t]->isPacked = true;
-
-				fsRect S2,S1;
-				S2 = fsRect(S.x+tempTextures[t]->img.width()+2*dp, S.y,
-							S.w - tempTextures[t]->img.width()-2*dp, tempTextures[t]->img.height()+2*dp);
-				S1 = fsRect(S.x, S.y+tempTextures[t]->img.height()+2*dp,
-							S.w, -1);
-
-				S = S1;
-				recursivePacking(&S2);
-			}
-
-			if ((canMake) && (totalHeight<minTotalHeight))
-			{
-				minTotalHeight = totalHeight;
-				for (int t=0; t<tempTextures.size(); t++)
-				{
-					optimTex[tempTextures[t]->texNum].setX(tempTextures[t]->x);
-					optimTex[tempTextures[t]->texNum].setY(tempTextures[t]->y);
-				}
-			}
-
-			currentStep++;
-			//emit currentProgress(currentPercent);
-		}
-
-	for (int t=0; t<textures.size(); t++)
-	{
-		textures[t].x = optimTex[t].x();
-		textures[t].y = optimTex[t].y();
-	}
-
-	progress.setValue(100);
-
-	makeAtlas();
-
-	if ((textures.size()>0) &&(minTotalHeight > atlasHeight))
-		emit cantMakeAtlas();
+	//if (!abort)
+		//progress.setValue(100);
+	//if ((textures.size()>0) &&(minTotalHeight > atlasHeight))
+		//emit cantMakeAtlas();
 }
 
 CPoint TextureModel::pixelSpaceToUVSpace(CPoint xy)
