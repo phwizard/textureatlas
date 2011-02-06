@@ -68,6 +68,7 @@ int TextureModel::addTexture(QString path, bool mustRemakeAtlas)
 		imageNameToAdd = imageNameToAdd.left(lastPosPoint);
 	imageNameToAdd.replace(QChar(' '),QChar('_'));
 	imageNameToAdd.replace(QChar('.'),QChar('_'));
+	imageNameToAdd.replace(QChar('-'),QChar('_'));
 
 	///check- maybe we added this texture
 	for (int i=0; i<textures.size(); i++)
