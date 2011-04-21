@@ -67,8 +67,8 @@ int TextureModel::addTexture(QString path, bool mustRemakeAtlas)
 	if (lastPosPoint != -1)
 		imageNameToAdd = imageNameToAdd.left(lastPosPoint);
 	imageNameToAdd.replace(QChar(' '),QChar('_'));
-	imageNameToAdd.replace(QChar('.'),QChar('_'));
-	imageNameToAdd.replace(QChar('-'),QChar('_'));
+        imageNameToAdd.replace(QChar('.'),QChar('_'));
+        imageNameToAdd.replace(QChar('-'),QChar('_'));
 
 	///check- maybe we added this texture
 	for (int i=0; i<textures.size(); i++)
@@ -610,4 +610,14 @@ void TextureModel::saveSelectedImages(QString _dir, QModelIndexList &selectedInd
 		}
 	}
 
+}
+
+
+void TextureModel::moveTexture(TTexture *tex, const QPoint &dp)
+{
+	if (!tex)
+		return;
+	tex->x += dp.x();
+	tex->y += dp.y();
+	makeAtlas();
 }
