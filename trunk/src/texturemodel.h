@@ -78,6 +78,7 @@ public:
 			}
 	}
 
+	void moveTexture(TTexture *tex, const QPoint &dp);
 
 	void selectItems(QModelIndexList &selectedInd);
 

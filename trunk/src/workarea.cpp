@@ -233,6 +233,18 @@ void WorkArea::keyPressEvent(QKeyEvent *event)
 				selectedTexture=0;
 			}
 			break;
+		case Qt::Key_Left:
+			textureModel->moveTexture(selectedTexture, QPoint(-1,0));
+			break;
+		case Qt::Key_Right:
+			textureModel->moveTexture(selectedTexture, QPoint(1,0));
+			break;
+		case Qt::Key_Down:
+			textureModel->moveTexture(selectedTexture, QPoint(0,1));
+			break;
+		case Qt::Key_Up:
+			textureModel->moveTexture(selectedTexture, QPoint(0,-1));
+			break;
 		default: QWidget::keyPressEvent(event);
 	}
 }

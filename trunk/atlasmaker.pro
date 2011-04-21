@@ -5,6 +5,7 @@ QT += gui \
     console
 TARGET = textureatlasmaker
 CONFIG += release
+
 # DESTDIR = release
 TEMPLATE = app
 SOURCES += src/main.cpp \
@@ -15,14 +16,16 @@ SOURCES += src/main.cpp \
     tinyxml/tinystr.cpp \
     src/texturemodel.cpp \
     src/texturelistwidget.cpp \
-	src/workarea.cpp
+    src/workarea.cpp \
+    src/arrangethread.cpp
 HEADERS += src/mainwindow.h \
     tinyxml/tinyxml.h \
     tinyxml/tinystr.h \
     src/texturemodel.h \
     src/texturelistwidget.h \
     src/workarea.h \
-	src/common.h
+    src/common.h \
+    src/arrangethread.h
 FORMS += src/mainform.ui
 RESOURCES += src/texture.qrc
 OBJECTS_DIR = obj
