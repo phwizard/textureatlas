@@ -484,12 +484,15 @@ void TextureModel::SaveAtlas(QString path)
 		outH << "#define " << headerFName.toUpper() << "_H\n";
 		outH << "\n//Created by Texture Atlas Creator @milytia\n";
 
-		outH << "\n//Texture coordinates {left_bottom, left_top, right_top, right_bottom}\n";
+		outH << "\n//Texture coordinates format( every point in (x,y) ): {left_bottom, left_top, right_top, right_bottom}\n";
 
 		qSort(textures.begin(), textures.end(), texLessThan);
 
 		for (int i=0; i<textures.size(); i++)
 			outH << "#define _" << headerFName << "_" << textures[i].name << "_ " << i <<"\n";
+
+		outH << "\n#define " << headerFName << "_textures_count " << textures.size() <<"\n\n\n";
+
 
 		/*
 		for (int i=0; i<textures.size(); i++)
@@ -502,6 +505,7 @@ void TextureModel::SaveAtlas(QString path)
 		}
 		*/
 
+		/*
 		outH << "\nstatic const float " << headerFName << "[" << textures.size() << "][8] = { ";
 		for (int i=0; i<textures.size(); i++)
 		{
@@ -515,9 +519,31 @@ void TextureModel::SaveAtlas(QString path)
 
 		}
 		outH << "};\n\n";
+		*/
+
+		QString texVertsElemsName = QString("%1_%2").arg(headerFName).arg("verts");
+		QString sizesElemsName = QString("%1_%2").arg(headerFName).arg("sizes");
+
+		QStringList texVertsElemsNames;
+		for (int i=0; i<textures.size(); i++)
+		{
+			QString curElemName = QString("%1_%2_verts").arg(headerFName).arg(textures[i].name);
+			texVertsElemsNames.push_back(curElemName);
+			outH << "static const float " << curElemName << "[] = { ";
+			for (int p=0; p<7; p++)
+				outH << textures[i].texVerts[p] << ", ";
+			outH << textures[i].texVerts[7] << "};";
+			outH << "//\t" << textures[i].name << " - " << i << "\n";
+		}
+
+		outH << "\nstatic const float *" << texVertsElemsName << "[] = { " << texVertsElemsNames.join(", ") << "};\n";
+
+		outH << "\n\n";
+
 
 		//FIXME:
 		outH << "//{width,height}\n";
+		/*
 		outH << "static const float " << "size_" << headerFName << "[" << textures.size() << "][2] = { ";
 		for (int i=0; i<textures.size(); i++)
 		{
@@ -527,8 +553,25 @@ void TextureModel::SaveAtlas(QString path)
 			outH << "//" << textures[i].name << " - " << i << "\n";
 		}
 		outH << "};\n\n";
+		*/
+		QStringList sizesElemsNames;
+		for (int i=0; i<textures.size(); i++)
+		{
+			QString curElemName = QString("%1_%2_size").arg(headerFName).arg(textures[i].name);
+			sizesElemsNames.push_back(curElemName);
+			outH << "static const float " << curElemName << "[] = { " << textures[i].img.width() << ", "<< textures[i].img.height() << "};";
+			outH << "//" << textures[i].name << " - " << i << "\n";
+		}
+		outH << "\nstatic const float *" << sizesElemsName << "[] = { " << sizesElemsNames.join(", ") << "};\n";
+		outH << "\n\n";
+
+
+
+
+
 
 		outH << "///{width/height}\n";
+		/*
 		outH << "\nstatic const float " << "wh_" << headerFName << "[" << textures.size() << "] = { ";
 		for (int i=0; i<textures.size(); i++)
 		{
@@ -538,15 +581,25 @@ void TextureModel::SaveAtlas(QString path)
 			outH << "//" << textures[i].name << " - " << i << "\n";
 		}
 		outH << "};\n";
+		*/
+		outH << "\nstatic const float " << headerFName << "_wh[] = { ";
+		for (int i=0; i<textures.size(); i++)
+		{
+			outH << (float)textures[i].img.width()/(float)textures[i].img.height();
+			if (i < (textures.size()-1))
+				outH << ",";
+			outH << "//" << textures[i].name << " - " << i << "\n";
+		}
+		outH << "};\n";
+		outH << "\n\n";
+
 
 		///////////
-		QString sizeS = "size_" + headerFName;
-
 		outH << "static void "<< headerFName << "_drawTextureAtPoint(int tex, float x, float y, float z) {" << "\n";
 		outH << "   glPushMatrix();" << "\n";
-		outH << "   glTexCoordPointer(2, GL_FLOAT, 0, " << headerFName << "[tex]);" << "\n";
+		outH << "   glTexCoordPointer(2, GL_FLOAT, 0, " << texVertsElemsName << "[tex]);" << "\n";
 		outH << "   glTranslatef(x, y, z);" << "\n";
-		outH << "   glScalef(" << sizeS << "[tex][0], " << sizeS << "[tex][1], 1);" << "\n";
+		outH << "   glScalef(" << sizesElemsName << "[tex][0], " << sizesElemsName << "[tex][1], 1);" << "\n";
 		outH << "   glDrawArrays(GL_TRIANGLE_FAN, 0, 4);" << "\n";
 		outH << "   glPopMatrix();" << "\n";
 		outH << "}" << "\n";
